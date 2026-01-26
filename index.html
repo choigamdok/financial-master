@@ -55,6 +55,8 @@
             }
         }
 
+
+
         /* 토스 스타일 카드 */
         .toss-card {
             background: white;
@@ -213,7 +215,12 @@
                 border: 1px solid #e5e7eb;
                 box-shadow: none;
             }
-        }
+
+
+
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
     </style>
 </head>
 
@@ -906,11 +913,80 @@
                 </p>
             </div>
 
-            <!-- iframe Container -->
-            <div class="toss-card p-0 overflow-hidden" style="height: calc(100vh - 300px); min-height: 600px;">
-                <iframe id="iframe-lifecycle" src="life_cycle.html" class="w-full h-full border-0" title="생애주기 플래너"
-                    loading="lazy">
-                </iframe>
+            <!-- Life Cycle SPA Container -->
+            <div class="bg-white rounded-xl shadow-lg border border-purple-100 overflow-hidden flex flex-col"
+                style="height: 600px;">
+                <!-- Controls (Top) -->
+                <div class="p-5 border-b border-gray-100 bg-white z-10 space-y-4">
+                    <div class="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">현재 나이 설정</label>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.lcFuncs.updateAge(-1)"
+                                    class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-600 transition-colors">-</button>
+                                <span id="lc-display-age"
+                                    class="text-xl font-black text-gray-800 w-12 text-center">30</span>
+                                <button onclick="window.lcFuncs.updateAge(1)"
+                                    class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold text-gray-600 transition-colors">+</button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">새 재무 목표 추가</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="lc-input-label" placeholder="예: 결혼, 주택구입"
+                                    class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-purple-500 transition-colors">
+                                <input type="number" id="lc-input-age" placeholder="나이"
+                                    class="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-purple-500 transition-colors">
+                                <input type="number" id="lc-input-amount" placeholder="금액(만)"
+                                    class="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-purple-500 transition-colors">
+                                <button onclick="window.lcFuncs.addGoal()"
+                                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-sm transition-colors shadow-md">추가</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Presets -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.lcFuncs.addPreset('결혼', 32, 5000)"
+                            class="px-3 py-1.5 rounded-full bg-pink-50 text-pink-600 text-xs font-bold hover:bg-pink-100 transition-colors border border-pink-100">💍
+                            결혼 (32세, 5천)</button>
+                        <button onclick="window.lcFuncs.addPreset('주택', 35, 30000)"
+                            class="px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-100">🏠
+                            주택 (35세, 3억)</button>
+                        <button onclick="window.lcFuncs.addPreset('차량', 30, 3000)"
+                            class="px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 text-xs font-bold hover:bg-slate-100 transition-colors border border-slate-100">🚗
+                            차량 (30세, 3천)</button>
+                        <button onclick="window.lcFuncs.addPreset('여행', 40, 1000)"
+                            class="px-3 py-1.5 rounded-full bg-green-50 text-green-600 text-xs font-bold hover:bg-green-100 transition-colors border border-green-100">✈️
+                            여행 (40세, 1천)</button>
+                        <button onclick="window.lcFuncs.addPreset('자녀', 33, 1000)"
+                            class="px-3 py-1.5 rounded-full bg-yellow-50 text-yellow-600 text-xs font-bold hover:bg-yellow-100 transition-colors border border-yellow-100">👶
+                            자녀 (33세, 1천)</button>
+                    </div>
+                </div>
+
+                <!-- Timeline Container -->
+                <div id="lc-timeline-container"
+                    class="flex-1 overflow-x-auto relative bg-slate-50 custom-scroll cursor-grab active:cursor-grabbing select-none">
+                    <div id="lc-timeline-content" class="h-full flex px-10 pt-12 pb-4 min-w-max relative items-end">
+                        <!-- JS Generated Timeline -->
+                    </div>
+                </div>
+
+                <!-- Footer Summary -->
+                <div
+                    class="p-4 border-t border-gray-100 bg-white flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.02)] z-20">
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium">총 필요 자금 합계</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">설정된 모든 재무 목표의 단순 합계입니다.</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="lc-total-amount"
+                            class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">0</span>
+                        <span class="text-sm font-bold text-gray-600">만원</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -946,11 +1022,122 @@
                 </p>
             </div>
 
-            <!-- iframe Container -->
-            <div class="toss-card p-0 overflow-hidden" style="height: calc(100vh - 300px); min-height: 600px;">
-                <iframe id="iframe-withdrawal" src="./retirement_withdrawal.html" class="w-full h-full border-0"
-                    title="은퇴 인출 시뮬레이터">
-                </iframe>
+            <!-- 은퇴 인출 시뮬레이터 컨텐츠 (Integrated) -->
+            <div class="space-y-6">
+                <!-- Data Inputs & Summary -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Inputs -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" class="text-green-600" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                자금 입력 (단위: 천원)
+                            </h2>
+                            <div class="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-lg text-sm text-blue-800">
+                                <span class="font-semibold">현재 나이:</span>
+                                <input type="number" id="rw-currentAge" value="50"
+                                    class="w-16 p-1 border border-blue-200 rounded text-center bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                                <span>세</span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-100 text-gray-600 uppercase">
+                                    <tr>
+                                        <th class="px-3 py-3 rounded-l-lg w-1/3">준비된 은퇴자금</th>
+                                        <th class="px-3 py-3 w-1/6">수령 시작</th>
+                                        <th class="px-3 py-3 w-1/6">수령 종료</th>
+                                        <th class="px-3 py-3 rounded-r-lg w-1/4">월 수령액(천원)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rw-inputTableBody" class="divide-y divide-gray-100">
+                                    <!-- JS Generated Rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500 flex flex-wrap gap-4">
+                            <span class="flex items-center gap-1">📌 물가상승률 적용: 2% (실질 가치 계산용)</span>
+                            <span class="flex items-center gap-1">📈 1번 항목(국민연금) 상승률: 1.5% (수령액 자동증액)</span>
+                        </div>
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-center">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">요약 (65세 기준)</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">65세 예상 월 수령액 (명목)</p>
+                                <p class="text-4xl font-bold text-blue-600">
+                                    <span id="rw-summaryNominal">0</span> <span
+                                        class="text-lg text-gray-500 font-normal">천원</span>
+                                </p>
+                            </div>
+                            <div class="pt-4 border-t border-gray-100">
+                                <p class="text-sm text-gray-500 mb-1">실질 가치 환산 (물가반영)</p>
+                                <p class="text-2xl font-bold text-gray-700">
+                                    <span id="rw-summaryPV">0</span> <span
+                                        class="text-sm text-gray-500 font-normal">천원</span>
+                                </p>
+                                <p class="text-xs text-gray-400 mt-2">
+                                    * 현재 나이(<span id="rw-labelCurrentAge">50</span>세)로부터 65세까지 물가상승률 2%로 할인한 가치입니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            class="text-purple-600" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        나이대별 월 수령액 추이
+                    </h3>
+                    <div class="relative h-[400px] w-full">
+                        <canvas id="rw-mainChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detail Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            class="text-orange-600" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        상세 수령 계획표
+                    </h3>
+                    <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                        <table class="w-full text-sm text-right border-collapse">
+                            <thead class="bg-gray-100 text-gray-600 uppercase font-medium sticky top-0 z-10">
+                                <tr id="rw-detailTableHeader">
+                                    <th
+                                        class="px-4 py-3 text-center sticky left-0 bg-gray-100 border-r border-gray-200">
+                                        나이</th>
+                                    <!-- Dynamic Headers -->
+                                </tr>
+                            </thead>
+                            <tbody id="rw-detailTableBody" class="divide-y divide-gray-100">
+                                <!-- JS Generated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1719,20 +1906,39 @@
                 reportUrl = 'report_retirement.html';
 
             } else if (currentReportType === 'lifecycle') {
-                pendingReportData = { clientName, clientAge, purpose };
-                const iframe = document.getElementById('iframe-lifecycle');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage('requestReportData', '*');
-                }
-                return;
+                // Life Cycle SPA Integration
+                const goals = (typeof lcState !== 'undefined' && lcState.goals) ? lcState.goals : [];
+                const currentAge = (typeof lcState !== 'undefined') ? lcState.age : 30;
+
+                const goalsStr = encodeURIComponent(JSON.stringify(goals));
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    currentAge,
+                    goals: goalsStr
+                });
+                reportUrl = 'report_lifecycle.html';
+
 
             } else if (currentReportType === 'withdrawal') {
-                pendingReportData = { clientName, clientAge, purpose };
-                const iframe = document.getElementById('iframe-withdrawal');
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage('requestReportData', '*');
-                }
-                return;
+                // 은퇴 인출 보고서 (SPA Integrated)
+                // 65세 기준 데이터 찾기
+                // rwState가 초기화되지 않았을 경우를 대비한 방어 코드
+                const currentData = (typeof rwState !== 'undefined' && rwState.data) ? rwState.data : [];
+                const funds = (typeof rwState !== 'undefined' && rwState.funds) ? rwState.funds : [];
+                const currentAge = (typeof rwState !== 'undefined') ? rwState.currentAge : 50;
+
+                const summary65 = currentData.find(d => d.age === 65) || { totalNominal: 0, totalPV: 0 };
+                const fundsStr = encodeURIComponent(JSON.stringify(funds));
+
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    currentAge,
+                    summaryNominal: summary65.totalNominal,
+                    summaryPV: summary65.totalPV,
+                    funds: fundsStr
+                });
+                reportUrl = 'report_withdrawal.html';
+
             }
 
             // 새 창에서 보고서 열기
@@ -1787,6 +1993,460 @@
                 closeReportModal();
                 pendingReportData = null;
             }
+        });
+    </script>
+
+    <script>
+        // ===== 은퇴 인출 시뮬레이터 (Integrated) =====
+        const RW_INFLATION_RATE = 0.02;
+        const RW_PENSION_GROWTH_RATE = 0.015;
+        const RW_FUND_COLORS = ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+
+        let rwChartInstance = null;
+
+        // 전역변수 (generateReport 접근용)
+        window.rwState = {
+            currentAge: 50,
+            funds: [
+                { id: 1, name: '국민연금 (공무원연금)', startAge: 65, endAge: 100, amount: 1500, isInflationLinked: true },
+                { id: 2, name: '직접 입력 1', startAge: 65, endAge: 75, amount: 0, isInflationLinked: false },
+                { id: 3, name: '직접 입력 2', startAge: 65, endAge: 75, amount: 0, isInflationLinked: false },
+                { id: 4, name: '개인연금', startAge: 60, endAge: 80, amount: 500, isInflationLinked: false },
+                { id: 5, name: '퇴직연금 (IRP)', startAge: 60, endAge: 70, amount: 1000, isInflationLinked: false },
+                { id: 6, name: '직접 입력 3', startAge: 65, endAge: 75, amount: 0, isInflationLinked: false },
+            ],
+            data: []
+        };
+
+        const rwEls = {};
+
+        function initRetirementWithdrawal() {
+            rwEls.currentAge = document.getElementById('rw-currentAge');
+            rwEls.labelCurrentAge = document.getElementById('rw-labelCurrentAge'); // Optional if exists
+            rwEls.inputTableBody = document.getElementById('rw-inputTableBody');
+            rwEls.summaryNominal = document.getElementById('rw-summaryNominal');
+            rwEls.summaryPV = document.getElementById('rw-summaryPV');
+            rwEls.detailTableHeader = document.getElementById('rw-detailTableHeader');
+            rwEls.detailTableBody = document.getElementById('rw-detailTableBody');
+            rwEls.canvas = document.getElementById('rw-mainChart');
+
+            if (rwEls.currentAge) {
+                rwEls.currentAge.addEventListener('input', (e) => {
+                    rwState.currentAge = Number(e.target.value);
+                    if (rwEls.labelCurrentAge) rwEls.labelCurrentAge.textContent = rwState.currentAge;
+                    calculateRetirementWithdrawal();
+                });
+            }
+
+            renderRetirementWithdrawalInputs();
+            calculateRetirementWithdrawal();
+        }
+
+        function renderRetirementWithdrawalInputs() {
+            if (!rwEls.inputTableBody) return;
+            rwEls.inputTableBody.innerHTML = '';
+            rwState.funds.forEach((fund, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = `group hover:bg-gray-50 transition-colors ${idx === 0 ? 'bg-blue-50/50' : ''}`;
+
+                tr.innerHTML = `
+                    <td class="px-3 py-2">
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${RW_FUND_COLORS[idx]}"></div>
+                                <input type="text" data-id="${fund.id}" data-field="name" value="${fund.name}" 
+                                    class="bg-transparent border-b border-transparent focus:border-blue-500 outline-none font-medium w-full text-gray-900 rw-input-field" placeholder="자금명 입력">
+                            </div>
+                            ${idx === 0 ? '<span class="text-xs text-blue-600 flex items-center gap-1 mt-1 pl-5"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> 매년 1.5% 증액</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="px-3 py-2">
+                        <div class="flex items-center gap-1">
+                            <input type="number" data-id="${fund.id}" data-field="startAge" value="${fund.startAge}" 
+                                class="w-full bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none text-center rw-input-field">
+                            <span class="text-gray-400 text-xs">세</span>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2">
+                        <div class="flex items-center gap-1">
+                            <input type="number" data-id="${fund.id}" data-field="endAge" value="${fund.endAge}" 
+                                class="w-full bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none text-center rw-input-field">
+                            <span class="text-gray-400 text-xs">세</span>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2">
+                        <div class="relative">
+                            <input type="number" data-id="${fund.id}" data-field="amount" value="${fund.amount}" 
+                                class="w-full bg-white border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none text-right font-mono rw-input-field">
+                            <span class="absolute right-8 top-1.5 text-xs text-gray-400 hidden group-hover:block">천원</span>
+                        </div>
+                    </td>
+                `;
+                rwEls.inputTableBody.appendChild(tr);
+            });
+
+            document.querySelectorAll('.rw-input-field').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const id = Number(e.target.dataset.id);
+                    const field = e.target.dataset.field;
+                    let val = e.target.value;
+                    if (field !== 'name') val = Number(val);
+
+                    const fund = rwState.funds.find(f => f.id === id);
+                    if (fund) {
+                        fund[field] = val;
+                        calculateRetirementWithdrawal();
+                    }
+                });
+            });
+        }
+
+        function calculateRetirementWithdrawal() {
+            const minStartAge = Math.min(...rwState.funds.map(f => f.startAge));
+            const maxEndAge = Math.max(...rwState.funds.map(f => f.endAge));
+            const displayStartAge = Math.min(rwState.currentAge, minStartAge);
+            const displayEndAge = Math.max(90, maxEndAge);
+
+            rwState.data = [];
+
+            for (let age = displayStartAge; age <= displayEndAge; age++) {
+                let row = { age, funds: [], totalNominal: 0, totalPV: 0 };
+
+                rwState.funds.forEach(fund => {
+                    let amount = 0;
+                    if (age >= fund.startAge && age <= fund.endAge) {
+                        if (fund.isInflationLinked) {
+                            const years = age - fund.startAge;
+                            amount = fund.amount * Math.pow(1 + RW_PENSION_GROWTH_RATE, years);
+                        } else {
+                            amount = fund.amount;
+                        }
+                    }
+                    row.funds.push(Math.round(amount));
+                    row.totalNominal += amount;
+                });
+
+                const yearsFromNow = age - rwState.currentAge;
+                const discount = Math.pow(1 + RW_INFLATION_RATE, Math.max(0, yearsFromNow));
+                row.totalPV = row.totalNominal / discount;
+
+                row.totalNominal = Math.round(row.totalNominal);
+                row.totalPV = Math.round(row.totalPV);
+
+                if (age >= minStartAge || age >= rwState.currentAge) {
+                    rwState.data.push(row);
+                }
+            }
+
+            renderRetirementWithdrawalSummary(rwState.data);
+            renderRetirementWithdrawalDetailTable(rwState.data);
+            renderRetirementWithdrawalChart(rwState.data);
+        }
+
+        function renderRetirementWithdrawalSummary(data) {
+            const age65 = data.find(d => d.age === 65);
+            if (age65) {
+                if (rwEls.summaryNominal) rwEls.summaryNominal.textContent = age65.totalNominal.toLocaleString();
+                if (rwEls.summaryPV) rwEls.summaryPV.textContent = age65.totalPV.toLocaleString();
+            } else {
+                if (rwEls.summaryNominal) rwEls.summaryNominal.textContent = '-';
+                if (rwEls.summaryPV) rwEls.summaryPV.textContent = '-';
+            }
+        }
+
+        function renderRetirementWithdrawalDetailTable(data) {
+            if (!rwEls.detailTableHeader || !rwEls.detailTableBody) return;
+
+            let headerHTML = `<th class="px-4 py-3 text-center sticky left-0 bg-gray-100 border-r border-gray-200">나이</th>`;
+            rwState.funds.forEach(f => {
+                headerHTML += `<th class="px-4 py-3 whitespace-nowrap min-w-[120px]">${f.name}</th>`;
+            });
+            headerHTML += `
+                <th class="px-4 py-3 bg-blue-50 text-blue-900 border-l border-blue-100 min-w-[120px]">합계 (명목)</th>
+                <th class="px-4 py-3 bg-red-50 text-red-900 min-w-[120px]">합계 (실질)</th>
+            `;
+            rwEls.detailTableHeader.innerHTML = headerHTML;
+
+            rwEls.detailTableBody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+
+                let rowHTML = `
+                    <td class="px-4 py-2 text-center font-medium text-gray-900 sticky left-0 bg-white border-r border-gray-200 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.1)]">
+                        ${row.age}세
+                    </td>
+                `;
+
+                row.funds.forEach((amt, idx) => {
+                    rowHTML += `
+                        <td class="px-4 py-2 ${amt > 0 ? 'text-gray-700' : 'text-gray-300'}">
+                            ${amt > 0 ? amt.toLocaleString() : '-'}
+                        </td>
+                    `;
+                });
+
+                rowHTML += `
+                    <td class="px-4 py-2 font-bold text-blue-600 bg-blue-50/30 border-l border-blue-100">
+                        ${row.totalNominal.toLocaleString()}
+                    </td>
+                    <td class="px-4 py-2 font-bold text-red-600 bg-red-50/30">
+                        ${row.totalPV.toLocaleString()}
+                    </td>
+                `;
+
+                tr.innerHTML = rowHTML;
+                rwEls.detailTableBody.appendChild(tr);
+            });
+        }
+
+        function renderRetirementWithdrawalChart(data) {
+            if (!rwEls.canvas) return;
+            const ctx = rwEls.canvas.getContext('2d');
+
+            const labels = data.map(d => `${d.age}세`);
+            const datasets = rwState.funds.map((fund, idx) => ({
+                label: fund.name,
+                data: data.map(d => d.funds[idx]),
+                backgroundColor: RW_FUND_COLORS[idx],
+                stack: 'Stack 0',
+            }));
+
+            datasets.push({
+                type: 'line',
+                label: '합계 (실질)',
+                data: data.map(d => d.totalPV),
+                borderColor: '#374151',
+                borderWidth: 3,
+                fill: false,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            });
+
+            if (rwChartInstance) rwChartInstance.destroy();
+
+            rwChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: {
+                            stacked: true,
+                            grid: { borderDash: [4, 4] },
+                            ticks: { callback: v => (v / 1000).toFixed(0) + '백만' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    let label = ctx.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (ctx.parsed.y !== null) label += ctx.parsed.y.toLocaleString() + ' 천원';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            initRetirementWithdrawal();
+        });
+    </script>
+
+    <script>
+        // ===== 생애 주기 시뮬레이터 (Integrated) =====
+        window.lcState = {
+            age: 30,
+            goals: [
+                { id: 1, label: '결혼', age: 32, amount: 5000, color: 'bg-pink-400', track: 0 },
+                { id: 2, label: '주택구입', age: 35, amount: 30000, color: 'bg-blue-400', track: 1 },
+                { id: 3, label: '자녀출산', age: 33, amount: 1000, color: 'bg-yellow-400', track: 2 }
+            ],
+            input: { label: '', age: '', amount: '' }
+        };
+
+        window.lcFuncs = {
+            updateAge: (delta) => {
+                let newAge = window.lcState.age + delta;
+                if (newAge < 0) newAge = 0;
+                if (newAge > 100) newAge = 100;
+                window.lcState.age = newAge;
+                window.lcFuncs.render();
+            },
+
+            addGoal: () => {
+                const labelIn = document.getElementById('lc-input-label');
+                const ageIn = document.getElementById('lc-input-age');
+                const amountIn = document.getElementById('lc-input-amount');
+
+                const label = labelIn.value.trim();
+                const age = parseInt(ageIn.value);
+                const amount = parseInt(amountIn.value);
+
+                if (!label || isNaN(age) || isNaN(amount)) {
+                    alert('모든 필드를 입력해주세요.');
+                    return;
+                }
+
+                if (age <= window.lcState.age) {
+                    alert('현재 나이보다 미래의 나이를 입력해주세요.');
+                    return;
+                }
+
+                const colors = ['bg-pink-400', 'bg-blue-400', 'bg-yellow-400', 'bg-green-400', 'bg-purple-400', 'bg-orange-400'];
+                const color = colors[window.lcState.goals.length % colors.length];
+
+                const newGoal = {
+                    id: Date.now(),
+                    label,
+                    age,
+                    amount,
+                    color,
+                    track: 0 // Will be recalculated
+                };
+
+                window.lcState.goals.push(newGoal);
+
+                // Reset inputs
+                labelIn.value = '';
+                ageIn.value = '';
+                amountIn.value = '';
+
+                window.lcFuncs.render();
+            },
+
+            addPreset: (label, age, amount) => {
+                const goalAge = (age > window.lcState.age) ? age : window.lcState.age + (age - 30 > 0 ? age - 30 : 5);
+
+                const colors = ['bg-pink-400', 'bg-blue-400', 'bg-yellow-400', 'bg-green-400', 'bg-purple-400', 'bg-orange-400'];
+                const color = colors[window.lcState.goals.length % colors.length];
+
+                const newGoal = {
+                    id: Date.now(),
+                    label,
+                    age: goalAge,
+                    amount,
+                    color,
+                    track: 0
+                };
+                window.lcState.goals.push(newGoal);
+                window.lcFuncs.render();
+            },
+
+            removeGoal: (id) => {
+                window.lcState.goals = window.lcState.goals.filter(g => g.id !== id);
+                window.lcFuncs.render();
+            },
+
+            render: () => {
+                // Update Age Display
+                const displayAge = document.getElementById('lc-display-age');
+                if (displayAge) displayAge.textContent = window.lcState.age;
+
+                // Calculate Tracks (Simple greedy stacking)
+                // Sort goals by age
+                let sortedGoals = [...window.lcState.goals].sort((a, b) => a.age - b.age);
+
+                // Reset tracks
+                sortedGoals.forEach(g => g.track = 0);
+
+                // Assign tracks to avoid overlap (visual overlap approx 3 years width?)
+                // Let's just stack them cyclically for simplicity, or based on overlap.
+                // For this simple mock, just use index % 3 if close? 
+                // Better: Logic to check if previous goal on same track is too close.
+                const tracks = [[], [], [], [], []]; // 5 tracks max
+
+                sortedGoals.forEach(g => {
+                    // Try to fit in track 0, then 1...
+                    let placed = false;
+                    for (let i = 0; i < tracks.length; i++) {
+                        const lastGoalInTrack = tracks[i][tracks[i].length - 1];
+                        if (!lastGoalInTrack || (g.age - lastGoalInTrack.age > 2)) { // Require 2 years gap
+                            tracks[i].push(g);
+                            g.track = i;
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if (!placed) { // Overflow track
+                        tracks[4].push(g);
+                        g.track = 4;
+                    }
+                });
+
+                // Render Timeline
+                const container = document.getElementById('lc-timeline-content');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                // Draw 61 years (Current Age to +60)
+                const startAge = window.lcState.age;
+                const endAge = startAge + 60;
+
+                for (let i = 0; i <= 60; i++) {
+                    const age = startAge + i;
+
+                    // Year Column
+                    const col = document.createElement('div');
+                    col.className = 'flex flex-col items-center flex-shrink-0 w-16 relative h-full group';
+
+                    // Grid Line
+                    const line = document.createElement('div');
+                    line.className = `absolute top-0 bottom-8 w-px ${i % 10 === 0 ? 'bg-gray-300' : 'bg-gray-100'}`;
+                    col.appendChild(line);
+
+                    // Age Label
+                    const label = document.createElement('div');
+                    label.className = `absolute bottom-0 text-xs font-bold ${i % 10 === 0 ? 'text-gray-800' : 'text-gray-400'}`;
+                    label.textContent = age + '세';
+                    col.appendChild(label);
+
+                    // Render Goals in this year
+                    const goalsHere = sortedGoals.filter(g => g.age === age);
+                    goalsHere.forEach(g => {
+                        const goalEl = document.createElement('div');
+                        // Calculate bottom position based on track
+                        const bottom = 40 + (g.track * 60); // 40px base + 60px per track
+
+                        goalEl.className = `absolute left-1/2 transform -translate-x-1/2 w-28 rounded-lg p-2 shadow-sm border border-white bg-opacity-90 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform z-10 ${g.color}`;
+                        goalEl.style.bottom = `${bottom}px`;
+                        goalEl.onclick = () => {
+                            if (confirm(`'${g.label}' 목표를 삭제하시겠습니까?`)) {
+                                window.lcFuncs.removeGoal(g.id);
+                            }
+                        };
+
+                        goalEl.innerHTML = `
+                            <div class="text-[10px] text-white opacity-90 font-medium leading-none mb-0.5">${g.label}</div>
+                            <div class="text-xs font-black text-white">${(g.amount / 10000 >= 1) ? (g.amount / 10000).toFixed(1) + '억' : g.amount.toLocaleString() + '만'}</div>
+                        `;
+                        col.appendChild(goalEl);
+                    });
+
+                    container.appendChild(col);
+                }
+
+                // Update Summary
+                const total = window.lcState.goals.reduce((sum, g) => sum + g.amount, 0);
+                const totalEl = document.getElementById('lc-total-amount');
+                if (totalEl) totalEl.textContent = total.toLocaleString();
+            }
+        };
+
+        // Initialize Call
+        window.addEventListener('DOMContentLoaded', () => {
+            initLifeCycle();
         });
     </script>
 </body>

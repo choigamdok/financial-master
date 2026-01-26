@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>은퇴 자금 설계 보고서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden print:shadow-none print:max-w-none">
+
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white p-8">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-black mb-2">황금 거위 만들기 플랜</h1>
+                    <p class="text-blue-100">Retirement Fund Building Plan</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-lg" id="r-clientName">홍길동님</p>
+                    <p class="text-sm text-blue-200 mt-1" id="r-date">2024.01.01</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="p-8 space-y-8">
+
+            <!-- Goal Section -->
+            <div class="bg-blue-50 rounded-xl p-8 border border-blue-100 text-center">
+                <p class="text-blue-600 font-bold mb-2">매월 받고 싶은 연금액</p>
+                <div class="text-4xl font-black text-blue-900 mb-4" id="r-monthlyPension">300 만원</div>
+                <div class="w-full h-px bg-blue-200 my-4"></div>
+                <p class="text-gray-600 text-sm mb-1">이를 위해 필요한 황금 거위 (목표 자산)</p>
+                <div class="text-2xl font-bold text-gray-800" id="r-targetAmount">514,285,714 원</div>
+                <p class="text-xs text-gray-400 mt-1">* 연 배당률 7% 가정</p>
+            </div>
+
+            <!-- Action Plan -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Step 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <span class="text-6xl font-black">1</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span
+                            class="bg-green-100 text-green-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">1단계</span>
+                        목돈 만들기 (저축)
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">저축 기간</span>
+                            <span class="font-bold" id="r-saveYears">10년</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">수익률</span>
+                            <span class="font-bold" id="r-saveRate">5%</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-gray-100">
+                            <span class="text-gray-800 font-bold">월 저축액</span>
+                            <span class="font-bold text-blue-600 text-lg" id="r-monthlySave">0원</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">1단계 달성액</span>
+                            <span class="font-bold text-gray-800" id="r-stage1Amount">0원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <span class="text-6xl font-black">2</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span
+                            class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold">2단계</span>
+                        거치하며 불리기
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">거치 기간</span>
+                            <span class="font-bold" id="r-deferYears">15년</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">수익률</span>
+                            <span class="font-bold" id="r-deferRate">7%</span>
+                        </div>
+                        <div class="flex justify-between pt-2 border-t border-gray-100">
+                            <span class="text-gray-800 font-bold">최종 자산</span>
+                            <span class="font-bold text-purple-600 text-lg" id="r-stage2Amount">0원</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">달성률</span>
+                            <span class="font-bold text-gray-800" id="r-achievementRate">100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conclusion -->
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-100 text-center">
+                <p class="text-gray-700 leading-relaxed">
+                    <span class="font-bold text-gray-900" id="r-clientName2">홍길동</span>님은
+                    <span class="font-bold text-blue-600" id="r-monthlySave2">0원</span>씩
+                    <span class="font-bold text-gray-900" id="r-totalYears">25년</span>간 플랜을 실행하시면,<br>
+                    은퇴 시점에 매월 <span class="font-bold text-blue-600" id="r-monthlyPension2">300만원</span>의 연금 소득을 창출하는<br>
+                    황금 거위 자산을 확보하실 수 있습니다.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 p-8 text-center text-xs text-gray-500 border-t border-gray-100">
+            <p class="mb-2">본 보고서는 입력하신 데이터를 바탕으로 생성된 시뮬레이션 결과입니다. 실제 수익률은 변동될 수 있습니다.</p>
+            <p>Financial Master Helper © 2024</p>
+        </div>
+    </div>
+
+    <!-- Print Button -->
+    <button onclick="window.print()"
+        class="no-print fixed bottom-8 right-8 bg-gray-900 text-white p-4 rounded-full shadow-xl hover:bg-black transition-all transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+    </button>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+
+            const clientName = params.get('clientName') || '고객';
+            const monthlyPension = parseInt(params.get('monthlyPension')) || 0;
+            const targetAmount = parseInt(params.get('targetAmount')) || 0;
+
+            const saveYears = params.get('saveYears');
+            const saveRate = params.get('saveRate');
+            const monthlySave = parseInt(params.get('monthlySave')) || 0;
+            const stage1Amount = parseInt(params.get('stage1Amount')) || 0;
+
+            const deferYears = params.get('deferYears');
+            const deferRate = params.get('deferRate');
+            const stage2Amount = parseInt(params.get('stage2Amount')) || 0;
+
+            // Render
+            document.getElementById('r-clientName').textContent = clientName + ' 님';
+            document.getElementById('r-clientName2').textContent = clientName;
+            document.getElementById('r-date').textContent = new Date().toLocaleDateString();
+
+            document.getElementById('r-monthlyPension').textContent = monthlyPension.toLocaleString() + ' 만원';
+            document.getElementById('r-monthlyPension2').textContent = monthlyPension.toLocaleString() + '만원';
+            document.getElementById('r-targetAmount').textContent = targetAmount.toLocaleString() + ' 원';
+
+            document.getElementById('r-saveYears').textContent = saveYears + '년';
+            document.getElementById('r-saveRate').textContent = saveRate + '%';
+            document.getElementById('r-monthlySave').textContent = monthlySave.toLocaleString() + '원';
+            document.getElementById('r-monthlySave2').textContent = monthlySave.toLocaleString() + '원';
+            document.getElementById('r-stage1Amount').textContent = stage1Amount.toLocaleString() + '원 달성';
+
+            document.getElementById('r-deferYears').textContent = deferYears + '년';
+            document.getElementById('r-deferRate').textContent = deferRate + '%';
+            document.getElementById('r-stage2Amount').textContent = stage2Amount.toLocaleString() + '원 달성';
+
+            const totalYears = parseInt(saveYears) + parseInt(deferYears);
+            document.getElementById('r-totalYears').textContent = totalYears + '년';
+
+            if (stage2Amount > 0 && targetAmount > 0) {
+                const rate = Math.round((stage2Amount / targetAmount) * 100);
+                document.getElementById('r-achievementRate').textContent = rate + '%';
+            }
+        });
+    </script>
+</body>
+
+</html>
