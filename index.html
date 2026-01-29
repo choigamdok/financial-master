@@ -135,7 +135,7 @@
                 age: 35,
                 duration: 30,
                 principal: 50000000,
-                rateA: "3.5", // Initialize as string for input flexibility
+                rateA: "3.5",
                 rateB: "7.0"
             });
             
@@ -144,15 +144,12 @@
 
             // Input Handlers
             const handleIntInput = (field, val) => {
-                // Remove non-digits and leading zeros (unless it is just "0")
                 let clean = val.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
                 if (clean === '') clean = '0';
                 setState({ ...state, [field]: Number(clean) });
             };
 
             const handleRateInput = (field, val) => {
-                // Allow user to type decimal points freely
-                // Only prevent multiple dots or invalid characters
                 if (/^\d*\.?\d*$/.test(val)) {
                     setState({ ...state, [field]: val });
                 }
@@ -160,7 +157,6 @@
 
             const results = useMemo(() => {
                 const data = [];
-                // Parse strings to floats for calculation
                 const rA = parseFloat(state.rateA) || 0;
                 const rB = parseFloat(state.rateB) || 0;
 
@@ -187,7 +183,6 @@
                     const ctx = chartRef.current.getContext('2d');
                     if (chartInstance.current) chartInstance.current.destroy();
 
-                    // Gradients
                     const gradA = ctx.createLinearGradient(0, 0, 0, 400);
                     gradA.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
                     gradA.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
@@ -250,7 +245,6 @@
                             <span className="text-xs text-slate-400 font-medium">모든 금액 단위: 원(KRW)</span>
                         </div>
                         
-                        {/* 문구 삽입 1 */}
                         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                             현재 나이와 투자 기간, 초기 투자금액을 입력해 보세요.<br/>
                             수익률에 따라 자산이 어떻게 달라지는지 한눈에 보실 수 있어요.
@@ -420,7 +414,6 @@
 
                     {/* Chart Section */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        {/* 문구 삽입 2 */}
                         <div className="mb-8 border-l-4 border-navy-900 pl-4 py-1">
                             <p className="text-xl font-black text-slate-800 leading-tight">
                                 같은 돈, 같은 시간.<br/>
@@ -1112,8 +1105,15 @@
             const chartRef = useRef(null);
             const chartInstance = useRef(null);
 
+            // Colors for funds
+            const FUND_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#6366f1'];
+
             const handleFundChange = (id, field, val) => {
                 setFunds(funds.map(f => f.id === id ? { ...f, [field]: val } : f));
+            };
+
+            const toggleInflation = (id) => {
+                setFunds(funds.map(f => f.id === id ? { ...f, inflation: !f.inflation } : f));
             };
 
             const removeFund = (id) => {
@@ -1123,17 +1123,22 @@
             const analysis = useMemo(() => {
                 const data = [];
                 for (let a = age; a <= 90; a++) {
-                    let nominal = 0;
+                    let nominalTotal = 0;
+                    const fundValues = {};
+
                     funds.forEach(f => {
+                        let amt = 0;
                         if (a >= f.startAge && a <= f.endAge) {
-                            let amt = f.amount;
+                            amt = f.amount;
                             if (f.inflation) amt = amt * Math.pow(1.015, a - f.startAge); // 1.5% increase for pension
-                            nominal += amt;
                         }
+                        fundValues[f.id] = amt;
+                        nominalTotal += amt;
                     });
+                    
                     // PV calculation (Inflation 2%)
-                    const pv = nominal / Math.pow(1.02, a - age);
-                    data.push({ age: a, nominal, pv });
+                    const pv = nominalTotal / Math.pow(1.02, a - age);
+                    data.push({ age: a, nominalTotal, pv, fundValues });
                 }
                 return data;
             }, [age, funds]);
@@ -1143,40 +1148,58 @@
                     const ctx = chartRef.current.getContext('2d');
                     if (chartInstance.current) chartInstance.current.destroy();
 
-                    chartInstance.current = new Chart(ctx, {
+                    const datasets = funds.map((fund, idx) => ({
                         type: 'bar',
+                        label: fund.name,
+                        data: analysis.map(d => d.fundValues[fund.id] || 0),
+                        backgroundColor: FUND_COLORS[idx % FUND_COLORS.length],
+                        stack: 'stack0',
+                        order: 2
+                    }));
+
+                    datasets.push({
+                        type: 'line',
+                        label: '실질 가치 (물가반영)',
+                        data: analysis.map(d => d.pv),
+                        borderColor: '#1e293b', // navy-800
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        order: 1
+                    });
+
+                    chartInstance.current = new Chart(ctx, {
                         data: {
                             labels: analysis.map(d => `${d.age}세`),
-                            datasets: [
-                                {
-                                    type: 'bar',
-                                    label: '명목 수령액',
-                                    data: analysis.map(d => d.nominal),
-                                    backgroundColor: '#93c5fd',
-                                },
-                                {
-                                    type: 'line',
-                                    label: '실질 가치 (물가반영)',
-                                    data: analysis.map(d => d.pv),
-                                    borderColor: '#1e3a8a',
-                                    borderWidth: 2,
-                                    pointRadius: 0
-                                }
-                            ]
+                            datasets: datasets
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             interaction: { mode: 'index', intersect: false },
                             scales: {
-                                x: { grid: { display: false } },
-                                y: { grid: { borderDash: [4, 4] } }
+                                x: { grid: { display: false }, stacked: true },
+                                y: { grid: { borderDash: [4, 4] }, stacked: true } // Stacked true for correct axis scaling
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) label += ': ';
+                                            if (context.parsed.y !== null) {
+                                                label += Math.round(context.parsed.y).toLocaleString() + ' 천원';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
                 }
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-            }, [analysis]);
+            }, [analysis, funds]);
 
             return (
                 <div className="grid lg:grid-cols-3 gap-6 animate-fade-in pb-10">
@@ -1197,19 +1220,33 @@
                                             <th className="p-2 w-16">시작</th>
                                             <th className="p-2 w-16">종료</th>
                                             <th className="p-2 w-24 text-right">월 수령액</th>
+                                            <th className="p-2 w-20 text-center">물가연동</th>
                                             <th className="p-2 w-8 rounded-r-lg"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {funds.map(f => (
+                                        {funds.map((f, idx) => (
                                             <tr key={f.id} className="group hover:bg-slate-50">
                                                 <td className="p-2">
-                                                    <input type="text" value={f.name} onChange={(e) => handleFundChange(f.id, 'name', e.target.value)} className="w-full outline-none font-medium text-slate-700 bg-transparent" />
-                                                    {f.inflation && <span className="text-[10px] text-blue-500 block">매년 1.5% 증액</span>}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full shrink-0" style={{backgroundColor: FUND_COLORS[idx % FUND_COLORS.length]}}></div>
+                                                        <div className="w-full">
+                                                            <input type="text" value={f.name} onChange={(e) => handleFundChange(f.id, 'name', e.target.value)} className="w-full outline-none font-medium text-slate-700 bg-transparent" />
+                                                            {f.inflation && <span className="text-[10px] text-blue-500 block">매년 1.5% 증액</span>}
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td className="p-2"><input type="number" value={f.startAge} onChange={(e) => handleFundChange(f.id, 'startAge', Number(e.target.value))} className="w-full text-center outline-none bg-white border border-slate-200 rounded px-1" /></td>
                                                 <td className="p-2"><input type="number" value={f.endAge} onChange={(e) => handleFundChange(f.id, 'endAge', Number(e.target.value))} className="w-full text-center outline-none bg-white border border-slate-200 rounded px-1" /></td>
                                                 <td className="p-2"><input type="number" value={f.amount} onChange={(e) => handleFundChange(f.id, 'amount', Number(e.target.value))} className="w-full text-right outline-none font-bold text-royal-600 bg-transparent" /></td>
+                                                <td className="p-2 text-center">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={f.inflation} 
+                                                        onChange={() => toggleInflation(f.id)}
+                                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                                                    />
+                                                </td>
                                                 <td className="p-2 text-center"><button onClick={() => removeFund(f.id)} className="text-slate-300 hover:text-red-500"><X className="w-4 h-4"/></button></td>
                                             </tr>
                                         ))}
@@ -1221,10 +1258,10 @@
                         
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-96">
                              <div className="flex justify-between items-center mb-2">
-                                <h4 className="text-sm font-bold text-slate-600">수령액 시뮬레이션</h4>
+                                <h4 className="text-sm font-bold text-slate-600">나이대별 월 수령액 추이</h4>
                                 <div className="text-[10px] text-slate-400 flex gap-3">
-                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-300"></span>명목금액</span>
-                                    <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-navy-800"></span>실질가치(물가 2%반영)</span>
+                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-gray-200"></span>자금원(명목)</span>
+                                    <span className="flex items-center gap-1"><span className="w-4 h-0.5 bg-navy-800"></span>실질가치(물가 2%반영)</span>
                                 </div>
                             </div>
                             <div className="h-full pb-6">
@@ -1238,7 +1275,7 @@
                             <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">65세 시점 예상 수령액</h4>
                             <div className="mb-6">
                                 <p className="text-xs text-slate-400">명목 금액 (물가 미반영)</p>
-                                <p className="text-3xl font-black font-mono">{analysis.find(d => d.age === 65)?.nominal.toLocaleString()} <span className="text-lg font-normal text-slate-400">천원</span></p>
+                                <p className="text-3xl font-black font-mono">{analysis.find(d => d.age === 65)?.nominalTotal.toLocaleString() || '-'} <span className="text-lg font-normal text-slate-400">천원</span></p>
                             </div>
                             <div className="pt-4 border-t border-white/10">
                                 <p className="text-xs text-bronze-400">실질 가치 (물가 2% 반영)</p>
@@ -1249,16 +1286,28 @@
                         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[500px]">
                             <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-600">상세 수령 계획표</div>
                             <div className="overflow-y-auto custom-scroll flex-1">
-                                <table className="w-full text-sm text-right custom-table">
-                                    <thead className="text-xs text-slate-400">
-                                        <tr><th className="py-2 px-3 text-center">나이</th><th className="py-2 px-3">명목(천원)</th><th className="py-2 px-3">실질(천원)</th></tr>
+                                <table className="w-full text-xs text-right custom-table whitespace-nowrap">
+                                    <thead className="text-xs text-slate-500 bg-slate-50 sticky top-0 z-10">
+                                        <tr>
+                                            <th className="py-2 px-3 text-center border-b border-slate-200 sticky left-0 bg-slate-50 border-r">나이</th>
+                                            {funds.map((f, i) => (
+                                                <th key={f.id} className="py-2 px-3 border-b border-slate-200 font-medium truncate max-w-[80px]" style={{color: FUND_COLORS[i % FUND_COLORS.length]}}>{f.name}</th>
+                                            ))}
+                                            <th className="py-2 px-3 bg-blue-50/50 text-blue-900 border-b border-blue-100 border-l">합계(명목)</th>
+                                            <th className="py-2 px-3 bg-red-50/50 text-red-900 border-b border-red-100">합계(실질)</th>
+                                        </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-50 font-mono text-xs">
+                                    <tbody className="divide-y divide-slate-50 font-mono">
                                         {analysis.map(d => (
                                             <tr key={d.age} className="hover:bg-slate-50">
-                                                <td className="py-2 px-3 text-center font-sans font-bold text-slate-600 bg-slate-50/30">{d.age}세</td>
-                                                <td className="py-2 px-3 text-slate-500">{Math.round(d.nominal).toLocaleString()}</td>
-                                                <td className="py-2 px-3 text-navy-900 font-bold bg-royal-50/30">{Math.round(d.pv).toLocaleString()}</td>
+                                                <td className="py-2 px-3 text-center font-sans font-bold text-slate-600 bg-slate-50/30 sticky left-0 border-r border-slate-100">{d.age}세</td>
+                                                {funds.map(f => (
+                                                    <td key={f.id} className="py-2 px-3 text-slate-500">
+                                                        {d.fundValues[f.id] > 0 ? Math.round(d.fundValues[f.id]).toLocaleString() : '-'}
+                                                    </td>
+                                                ))}
+                                                <td className="py-2 px-3 text-blue-700 font-bold bg-blue-50/20 border-l border-slate-100">{Math.round(d.nominalTotal).toLocaleString()}</td>
+                                                <td className="py-2 px-3 text-red-700 font-bold bg-red-50/20">{Math.round(d.pv).toLocaleString()}</td>
                                             </tr>
                                         ))}
                                     </tbody>
