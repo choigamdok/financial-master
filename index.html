@@ -4,1409 +4,1791 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The One Financial Suite - Premium Asset Management</title>
+    <title> 재무설계 마스터 - 통합 재무 계산기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Import Maps for React & Libraries via ESM -->
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
-      }
-    }
-    </script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        }
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Noto Sans KR"', 'sans-serif'],
-                        mono: ['"Roboto Mono"', 'monospace'],
-                    },
-                    colors: {
-                        navy: {
-                            800: '#1e293b',
-                            900: '#0f172a',
-                        },
-                        royal: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        },
-                        bronze: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            700: '#b45309',
-                        }
-                    }
-                }
+        /* 토스 스타일 변수 */
+        :root {
+            --toss-blue: #0064FF;
+            --toss-blue-dark: #0052CC;
+            --toss-black: #191F28;
+            --toss-gray: #4E5968;
+            --toss-green: #00C73C;
+            --toss-red: #FF5A5F;
+            --toss-bg: #F9FAFB;
+        }
+
+        body {
+            background: var(--toss-bg);
+            color: var(--toss-black);
+        }
+
+        /* 탭 전환 애니메이션 */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-    </script>
-    <style>
-        /* Custom Scrollbar */
+
+        /* 토스 스타일 카드 */
+        .toss-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+
+        .toss-card:hover {
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        /* 토스 버튼 */
+        .toss-btn {
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+            padding: 16px 24px;
+            font-size: 16px;
+        }
+
+        .toss-btn-primary {
+            background: var(--toss-blue);
+            color: white;
+        }
+
+        .toss-btn-primary:hover {
+            background: var(--toss-blue-dark);
+            transform: translateY(-2px);
+        }
+
+        /* 토스 인풋 */
+        .toss-input {
+            border: 2px solid #E5E8EB;
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 16px;
+            transition: border 0.2s;
+            width: 100%;
+        }
+
+        .toss-input:focus {
+            border-color: var(--toss-blue);
+            outline: none;
+        }
+
+        /* 숫자 강조 */
+        .toss-number {
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+        }
+
+        /* 스크롤바 */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
+
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: #f1f1f1;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 3px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        /* 프린트 및 PDF 버튼 스타일 */
+        .btn-print,
+        .btn-pdf {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            border: none;
         }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+
+        .btn-print {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
         }
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
+
+        .btn-print:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        .btn-pdf {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
         }
-        /* Table Styling */
-        .custom-table th {
-            position: sticky;
-            top: 0;
-            background-color: #f8fafc; /* bg-slate-50 */
-            z-index: 10;
+
+        .btn-pdf:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* 프린트 시 스타일 */
+        @media print {
+
+            /* 프린트 시 숨길 요소 */
+            .no-print,
+            header,
+            .tab-btn,
+            nav,
+            button,
+            input[type="range"],
+            input[type="number"],
+            input[type="text"],
+            select {
+                display: none !important;
+            }
+
+            /* 페이지 설정 */
+            @page {
+                margin: 20mm;
+                size: A4;
+            }
+
+            body {
+                background: white;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            /* 결과 섹션은 보이도록 */
+            .tab-content.active {
+                display: block !important;
+            }
+
+            /* 차트 크기 조정 */
+            canvas {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+
+            /* 테이블 인쇄 최적화 */
+            table {
+                page-break-inside: avoid;
+            }
+
+            /* 카드 스타일 유지 */
+            .toss-card {
+                page-break-inside: avoid;
+                border: 1px solid #e5e7eb;
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 
-<body class="bg-slate-50 text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
-    <div id="root" class="w-full h-full"></div>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-blue-500 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight">재무설계 마스터</h1>
+                    <p class="text-blue-100 text-sm mt-1">모든 재무 계산을 한 곳에서</p>
+                </div>
+                <div class="hidden sm:block text-right">
+                    <p class="text-sm font-bold tracking-wide">Financial Master Calculator</p>
+                    <p class="text-xs text-blue-100 mt-0.5">금쇼맘의 금융스쿨</p>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef, useMemo } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { 
-            LayoutDashboard, 
-            TrendingUp, 
-            Clock, 
-            Umbrella, 
-            Calendar, 
-            DollarSign, 
-            Briefcase, 
-            Menu, 
-            X,
-            ChevronRight,
-            Home,
-            GraduationCap,
-            Plane,
-            Stethoscope,
-            Coins,
-            PlusCircle,
-            Trash2,
-            List,
-            AlertCircle,
-            CheckCircle,
-            ArrowRight
-        } from 'lucide-react';
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-gray-200 sticky top-[88px] sm:top-[96px] z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex overflow-x-auto gap-2 py-3 scrollbar-hide">
+                <!-- 1. 황금 거위 만들기 (Active) -->
+                <button onclick="switchTab('retirement', event)"
+                    class="tab-btn active whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>🎯 1. 황금 거위 (은퇴 준비)</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Golden Goose</span>
+                </button>
 
-        // --- Utility Functions ---
-        const formatMoney = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n));
-        const parseMoney = (s) => parseInt(String(s).replace(/[^0-9]/g, '')) || 0;
+                <!-- 2. 은퇴 인출 설계 -->
+                <button onclick="switchTab('withdrawal', event)"
+                    class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>💳 2. 은퇴 인출 (은퇴 생활)</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Withdrawal Plan</span>
+                </button>
 
-        // ==========================================
-        // 1. Wealth Growth Simulator Component
-        // ==========================================
-        const WealthSimulator = () => {
-            const [state, setState] = useState({
-                age: 35,
-                duration: 30,
-                principal: 50000000,
-                rateA: "3.5",
-                rateB: "7.0"
-            });
-            
-            const chartRef = useRef(null);
-            const chartInstance = useRef(null);
+                <!-- 3. 라이프 사이클 -->
+                <button onclick="switchTab('lifecycle', event)"
+                    class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>📅 3. 라이프 사이클</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Life Cycle</span>
+                </button>
 
-            // Input Handlers
-            const handleIntInput = (field, val) => {
-                let clean = val.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
-                if (clean === '') clean = '0';
-                setState({ ...state, [field]: Number(clean) });
-            };
+                <!-- 4. 복리의 마법 -->
+                <button onclick="switchTab('monthly-compound', event)"
+                    class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>📈 4. 복리의 마법</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Compound Magic</span>
+                </button>
 
-            const handleRateInput = (field, val) => {
-                if (/^\d*\.?\d*$/.test(val)) {
-                    setState({ ...state, [field]: val });
-                }
-            };
+                <!-- 5. 수익율 비교 -->
+                <button onclick="switchTab('compound', event)"
+                    class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>💰 5. 수익율 비교</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Return Compare</span>
+                </button>
 
-            const results = useMemo(() => {
-                const data = [];
-                const rA = parseFloat(state.rateA) || 0;
-                const rB = parseFloat(state.rateB) || 0;
+                <!-- 6. 게으름 비용 -->
+                <button onclick="switchTab('delay', event)"
+                    class="tab-btn whitespace-nowrap px-4 py-2.5 rounded-full font-bold text-sm transition-all flex flex-col items-center leading-tight">
+                    <span>⏰ 6. 게으름 비용</span>
+                    <span class="text-[10px] font-normal opacity-75 mt-0.5">Cost of Delay</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-                for (let i = 1; i <= state.duration; i++) {
-                    const totalA = state.principal * Math.pow((1 + rA / 100), i);
-                    const totalB = state.principal * Math.pow((1 + rB / 100), i);
-                    data.push({
-                        year: i,
-                        currentAge: state.age + i,
-                        totalA,
-                        totalB,
-                        accRateA: (totalA / state.principal) * 100,
-                        accRateB: (totalB / state.principal) * 100,
-                        diff: totalB - totalA
-                    });
-                }
-                return data;
-            }, [state]);
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            const final = results.length > 0 ? results[results.length - 1] : { totalA: 0, totalB: 0, diff: 0, accRateA: 0, accRateB: 0 };
-
-            useEffect(() => {
-                if (chartRef.current) {
-                    const ctx = chartRef.current.getContext('2d');
-                    if (chartInstance.current) chartInstance.current.destroy();
-
-                    const gradA = ctx.createLinearGradient(0, 0, 0, 400);
-                    gradA.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-                    gradA.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
-                    const gradB = ctx.createLinearGradient(0, 0, 0, 400);
-                    gradB.addColorStop(0, 'rgba(217, 119, 6, 0.2)');
-                    gradB.addColorStop(1, 'rgba(217, 119, 6, 0.0)');
-
-                    chartInstance.current = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: results.map(d => `${d.currentAge}세`),
-                            datasets: [
-                                {
-                                    label: 'Plan A (보수적)',
-                                    data: results.map(d => d.totalA),
-                                    borderColor: '#2563eb',
-                                    backgroundColor: gradA,
-                                    fill: true,
-                                    tension: 0.4,
-                                    pointRadius: 0,
-                                    pointHoverRadius: 6
-                                },
-                                {
-                                    label: 'Plan B (적극적)',
-                                    data: results.map(d => d.totalB),
-                                    borderColor: '#d97706',
-                                    backgroundColor: gradB,
-                                    fill: true,
-                                    tension: 0.4,
-                                    pointRadius: 0,
-                                    pointHoverRadius: 6
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: { mode: 'index', intersect: false },
-                            plugins: { legend: { display: true, position: 'top' } },
-                            scales: {
-                                x: { grid: { display: false } },
-                                y: { 
-                                    grid: { borderDash: [4, 4] },
-                                    ticks: { callback: (v) => v >= 100000000 ? (v/100000000).toFixed(0) + '억' : (v/10000).toFixed(0) + '만' }
-                                }
-                            }
-                        }
-                    });
-                }
-                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-            }, [results]);
-
-            return (
-                <div className="space-y-6 animate-fade-in pb-20">
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        <div className="flex justify-between items-center mb-2">
-                            <h2 className="text-lg font-bold text-navy-900 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-royal-600" /> 시뮬레이션 파라미터
-                            </h2>
-                            <span className="text-xs text-slate-400 font-medium">모든 금액 단위: 원(KRW)</span>
+        <!-- Tab 1: 복리 성장 -->
+        <div id="tab-compound" class="tab-content">
+            <div class="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">
+                            1
                         </div>
-                        
-                        <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                            현재 나이와 투자 기간, 초기 투자금액을 입력해 보세요.<br/>
-                            수익률에 따라 자산이 어떻게 달라지는지 한눈에 보실 수 있어요.
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-900">💰 수익율 비교</h2>
+                            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Wealth Growth
+                                Simulator</p>
+                        </div>
+                    </div>
+                    <!-- 보고서 생성 버튼 -->
+                    <button onclick="openReportModal()"
+                        class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <span>📊</span>
+                        고객 보고서 생성
+                    </button>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                    두 가지 투자 플랜을 비교하고 복리 효과를 확인하세요.
+                    <span class="font-bold text-blue-700">작은 이율 차이</span>도 장기적으로는
+                    <span class="font-bold text-purple-700">엄청난 자산 격차</span>를 만들어냅니다.
+                </p>
+            </div>
+
+            <!-- 입력 섹션 -->
+            <div class="toss-card mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-1.5 h-6 bg-gray-900 rounded-full"></div>
+                    <h3 class="text-lg font-bold text-gray-900">Simulation Parameters</h3>
+                    <span class="text-xs text-gray-400 font-medium ml-auto">모든 금액 단위: 원(KRW)</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">현재 나이</label>
+                        <div class="relative">
+                            <input type="number" id="comp-age" value="35" class="toss-input text-right pr-10">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">세</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">투자 기간</label>
+                        <div class="relative">
+                            <input type="number" id="comp-duration" value="30" class="toss-input text-right pr-10">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">년</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">예상 종료: <span id="comp-end-age"
+                                class="font-bold">65</span>세</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">초기 투자
+                            원금</label>
+                        <div class="relative">
+                            <input type="text" id="comp-principal" value="50,000,000"
+                                class="toss-input text-right pr-10 text-lg font-bold">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">원</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t">
+                    <div class="bg-blue-50 p-5 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div
+                                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="block text-xs font-bold text-gray-500 uppercase">Plan A</span>
+                                <span class="block text-sm font-bold text-blue-900">보수적 운용 (Conservative)</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="comp-rateA" value="3.5" step="0.1"
+                                class="toss-input text-right text-2xl font-bold text-blue-600">
+                            <span class="text-xl font-bold text-blue-600">%</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-amber-50 p-5 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div
+                                class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="block text-xs font-bold text-gray-500 uppercase">Plan B</span>
+                                <span class="block text-sm font-bold text-amber-900">적극적 운용 (Aggressive)</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="comp-rateB" value="7.0" step="0.1"
+                                class="toss-input text-right text-2xl font-bold text-amber-600">
+                            <span class="text-xl font-bold text-amber-600">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 결과 카드 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="toss-card bg-gradient-to-br from-blue-50 to-white border-blue-100">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Plan A</span>
+                    <h3 class="text-3xl font-black text-blue-700 mt-2 mb-1 toss-number" id="comp-totalA">0원</h3>
+                    <p class="text-sm text-gray-600">예상 최종 자산</p>
+                    <div class="mt-4 pt-4 border-t border-blue-100">
+                        <span class="text-xs text-gray-500">누적 수익률</span>
+                        <p class="text-lg font-bold text-blue-600 mt-1"><span id="comp-accRateA">0</span>%</p>
+                    </div>
+                </div>
+
+                <div class="toss-card bg-gradient-to-br from-amber-50 to-white border-amber-100">
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Plan B</span>
+                    <h3 class="text-3xl font-black text-amber-700 mt-2 mb-1 toss-number" id="comp-totalB">0원
+                    </h3>
+                    <p class="text-sm text-gray-600">예상 최종 자산</p>
+                    <div class="mt-4 pt-4 border-t border-amber-100">
+                        <span class="text-xs text-gray-500">누적 수익률</span>
+                        <p class="text-lg font-bold text-amber-600 mt-1"><span id="comp-accRateB">0</span>%</p>
+                    </div>
+                </div>
+
+                <div class="toss-card bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">차익 분석</span>
+                    <h3 class="text-3xl font-black text-white mt-2 mb-1 toss-number" id="comp-diff">0원</h3>
+                    <p class="text-sm text-gray-300">Plan B - Plan A</p>
+                    <div class="mt-4 pt-4 border-t border-gray-700">
+                        <span class="text-xs text-gray-400">이율 차이</span>
+                        <p class="text-lg font-bold text-amber-400 mt-1"><span id="comp-rateDiff">0.0</span>%p
                         </p>
+                    </div>
+                </div>
+            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase">현재 나이</label>
-                                <div className="flex items-center gap-2">
-                                    <input 
-                                        type="tel" 
-                                        value={state.age === 0 ? '' : state.age} 
-                                        onChange={(e) => handleIntInput('age', e.target.value)} 
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-right outline-none focus:border-royal-500 focus:bg-white transition-all text-xl" 
-                                    />
-                                    <span className="text-slate-500 font-bold whitespace-nowrap w-4">세</span>
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase">투자 기간</label>
-                                <div className="flex items-center gap-2">
-                                    <input 
-                                        type="tel" 
-                                        value={state.duration === 0 ? '' : state.duration} 
-                                        onChange={(e) => handleIntInput('duration', e.target.value)} 
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-right outline-none focus:border-royal-500 focus:bg-white transition-all text-xl" 
-                                    />
-                                    <span className="text-slate-500 font-bold whitespace-nowrap w-4">년</span>
-                                </div>
-                                <div className="text-right text-[10px] text-slate-400">예상 종료: <span className="text-slate-600 font-bold">{state.age + state.duration}</span>세</div>
-                            </div>
-                            <div className="space-y-2 lg:col-span-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase">초기 투자 원금</label>
-                                <div className="relative">
-                                    <input type="text" value={formatMoney(state.principal)} onChange={(e) => setState({...state, principal: parseMoney(e.target.value)})} className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-3 font-bold text-right outline-none focus:border-royal-500 focus:bg-white transition-all font-mono text-2xl text-navy-900" />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-bold">원</span>
-                                </div>
-                                <div className="flex gap-2 mt-2">
-                                    {[50000000, 100000000, 200000000, 500000000].map(amt => (
-                                        <button 
-                                            key={amt} 
-                                            onClick={() => setState({...state, principal: amt})}
-                                            className="flex-1 bg-white border border-slate-200 text-xs font-bold text-slate-500 py-2 rounded-lg hover:bg-slate-50 hover:border-royal-300 hover:text-royal-600 transition-all shadow-sm"
-                                        >
-                                            {amt >= 100000000 ? (amt / 100000000) + '억' : (amt / 10000) + '만'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+            <!-- 차트 -->
+            <div class="toss-card mb-6">
+                <!-- 임팩트 문구 -->
+                <div class="text-center mb-6 py-4 bg-gradient-to-r from-blue-50 to-amber-50 rounded-xl">
+                    <p class="text-xl font-black text-gray-900 leading-relaxed">
+                        같은 돈, 같은 시간.<br>
+                        <span class="text-blue-600">다른 수익률</span>, <span class="text-amber-600">전혀 다른 미래</span>
+                    </p>
+                </div>
+
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Asset Growth Projection</h3>
+                        <p class="text-sm text-gray-500 mt-1">시간 경과에 따른 자산 가치 변화 비교</p>
+                    </div>
+                    <div class="flex gap-6">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span>
+                            <span class="text-xs font-bold text-gray-600">Plan A (보수적)</span>
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-slate-100">
-                            {/* Plan A */}
-                            <div className="flex flex-col gap-4 p-4 bg-royal-50/50 rounded-xl border border-royal-100 hover:bg-royal-50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center text-royal-600">
-                                            <TrendingUp className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-bold text-slate-400 uppercase">Plan A</div>
-                                            <div className="text-sm font-bold text-royal-700">보수적 운용</div>
-                                        </div>
-                                    </div>
-                                    <div className="relative w-28">
-                                        <input 
-                                            type="text" 
-                                            inputMode="decimal"
-                                            value={state.rateA} 
-                                            onChange={(e) => handleRateInput('rateA', e.target.value)} 
-                                            className="w-full bg-transparent border-b-2 border-slate-200 text-royal-600 font-bold text-right pr-6 py-1 focus:outline-none focus:border-royal-500 text-2xl transition-colors" 
-                                        />
-                                        <span className="absolute right-0 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">%</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    {[1, 2, 3, 4, 5].map(rate => (
-                                        <button 
-                                            key={rate} 
-                                            onClick={() => setState({...state, rateA: String(rate)})}
-                                            className="flex-1 bg-white border border-royal-200 text-royal-600 text-xs font-bold py-1.5 rounded-lg hover:bg-royal-100 transition-colors"
-                                        >
-                                            {rate}%
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></span>
+                            <span class="text-xs font-bold text-gray-600">Plan B (적극적)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative" style="height: 400px;">
+                    <canvas id="compChart"></canvas>
+                </div>
+            </div>
 
-                            {/* Plan B */}
-                            <div className="flex flex-col gap-4 p-4 bg-bronze-50/50 rounded-xl border border-bronze-100 hover:bg-bronze-50 transition-colors">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-bronze-100 flex items-center justify-center text-bronze-600">
-                                            <TrendingUp className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-bold text-slate-400 uppercase">Plan B</div>
-                                            <div className="text-sm font-bold text-bronze-700">적극적 운용</div>
-                                        </div>
-                                    </div>
-                                    <div className="relative w-28">
-                                        <input 
-                                            type="text" 
-                                            inputMode="decimal"
-                                            value={state.rateB} 
-                                            onChange={(e) => handleRateInput('rateB', e.target.value)} 
-                                            className="w-full bg-transparent border-b-2 border-slate-200 text-bronze-600 font-bold text-right pr-6 py-1 focus:outline-none focus:border-bronze-500 text-2xl transition-colors" 
-                                        />
-                                        <span className="absolute right-0 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">%</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    {[6, 7, 8, 9, 10].map(rate => (
-                                        <button 
-                                            key={rate} 
-                                            onClick={() => setState({...state, rateB: String(rate)})}
-                                            className="flex-1 bg-white border border-bronze-200 text-bronze-600 text-xs font-bold py-1.5 rounded-lg hover:bg-bronze-100 transition-colors"
-                                        >
-                                            {rate}%
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+            <!-- 상세 테이블 -->
+            <div class="toss-card">
+                <h3 class="text-lg font-bold mb-4">연도별 상세 내역</h3>
+                <div class="overflow-x-auto">
+                    <div class="max-h-96 overflow-y-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr class="text-gray-600">
+                                    <th class="py-3 px-4 text-center font-bold">연도 / 나이</th>
+                                    <th class="py-3 px-4 text-right font-bold text-blue-700">Plan A 자산</th>
+                                    <th class="py-3 px-4 text-right text-gray-500">수익률</th>
+                                    <th class="py-3 px-4 text-right font-bold text-amber-700">Plan B 자산</th>
+                                    <th class="py-3 px-4 text-right text-gray-500">수익률</th>
+                                    <th class="py-3 px-4 text-right font-bold text-gray-900">차액</th>
+                                </tr>
+                            </thead>
+                            <tbody id="compTableBody" class="divide-y divide-gray-100">
+                                <!-- JS로 생성 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: 월 저축 복리 -->
+        <div id="tab-monthly-compound" class="tab-content">
+            <div class="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-900">📈 복리의 마법</h2>
+                            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Monthly
+                                Savings
+                                Compound Calculator</p>
+                        </div>
+                    </div>
+                    <!-- 보고서 생성 버튼 -->
+                    <button onclick="openReportModal('monthly')"
+                        class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-green-700 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <span>📊</span>
+                        고객 보고서 생성
+                    </button>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                    "지금 쓰는 푼돈이 미래의 목돈이 됩니다." 매월 조금씩 저축하면 복리 효과로 <span class="font-bold text-green-700">놀라운
+                        자산</span>을 만들
+                    수 있습니다!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 입력 섹션 -->
+                <div class="toss-card space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">현재 나이</label>
+                        <div class="relative">
+                            <input type="number" id="mc-age" value="45" class="toss-input text-right pr-10">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">세</span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-royal-100 relative overflow-hidden group hover:shadow-md transition-all">
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-royal-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                            <div className="relative z-10">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-royal-50 text-royal-700 text-[10px] font-bold uppercase mb-4">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-royal-500"></span> Plan A
-                                </span>
-                                <div className="text-2xl font-black text-slate-700 font-mono tracking-tight">{formatMoney(final.totalA)}원</div>
-                                <p className="text-xs text-slate-400 font-medium mt-1">예상 최종 자산</p>
-                                <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                                    <span className="text-xs font-bold text-slate-400">수익률</span>
-                                    <span className="text-lg font-bold text-royal-600">{final.accRateA.toFixed(1)}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-bronze-100 relative overflow-hidden group hover:shadow-md transition-all">
-                             <div className="absolute top-0 right-0 w-20 h-20 bg-bronze-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                            <div className="relative z-10">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-bronze-50 text-bronze-700 text-[10px] font-bold uppercase mb-4">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-bronze-500"></span> Plan B
-                                </span>
-                                <div className="text-2xl font-black text-slate-700 font-mono tracking-tight">{formatMoney(final.totalB)}원</div>
-                                <p className="text-xs text-slate-400 font-medium mt-1">예상 최종 자산</p>
-                                <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                                    <span className="text-xs font-bold text-slate-400">수익률</span>
-                                    <span className="text-lg font-bold text-bronze-600">{final.accRateB.toFixed(1)}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-navy-900 p-6 rounded-2xl shadow-lg text-white flex flex-col justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-navy-800 to-navy-900"></div>
-                            <div className="relative z-10">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-[0.2em]">Gap Analysis</div>
-                                <div className="text-3xl font-black font-mono">+{formatMoney(final.diff)}</div>
-                                <div className="inline-block bg-white/10 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/5 mt-3">
-                                    <p className="text-xs text-slate-300">이율 <span className="text-bronze-400 font-bold mx-1">{((parseFloat(state.rateB)||0) - (parseFloat(state.rateA)||0)).toFixed(1)}%p</span> 차이</p>
-                                </div>
-                            </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">재무 목적</label>
+                        <input type="text" id="mc-goal" placeholder="예: 내 집 마련, 세계일주" class="toss-input">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">월 저축액: <span id="mc-save-text"
+                                class="text-green-600">300,000원</span></label>
+                        <input type="range" id="mc-save-range" min="100000" max="5000000" step="50000" value="300000"
+                            class="w-full accent-green-600 mb-2">
+                        <input type="number" id="mc-save-input" value="300000" class="toss-input text-right">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">예상 수익률: <span id="mc-rate-text"
+                                class="text-blue-600">5%</span></label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" id="mc-rate" min="1" max="15" step="0.5" value="5"
+                                class="w-full accent-blue-600">
                         </div>
                     </div>
 
-                    {/* Chart Section */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        <div className="mb-8 border-l-4 border-navy-900 pl-4 py-1">
-                            <p className="text-xl font-black text-slate-800 leading-tight">
-                                같은 돈, 같은 시간.<br/>
-                                <span className="text-royal-600">다른 수익률</span>, <span className="text-bronze-600">전혀 다른 미래.</span>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">투자 기간: <span id="mc-years-text"
+                                class="text-purple-600">10년</span></label>
+                        <input type="range" id="mc-years" min="5" max="40" step="1" value="10"
+                            class="w-full accent-purple-600">
+                        <p id="mc-end-age" class="text-xs text-purple-600 mt-1 text-right font-bold">예상 만기 나이:
+                            55세</p>
+                    </div>
+                </div>
+
+                <!-- 결과 & 차트 -->
+                <div class="lg:col-span-2 toss-card bg-gray-50">
+                    <div class="relative mb-4" style="height: 320px;">
+                        <canvas id="mcChart"></canvas>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-white p-3 rounded-lg border shadow-sm text-center">
+                            <p class="text-xs text-gray-500 mb-1">총 납입 원금</p>
+                            <p id="mc-res-principal" class="font-bold text-gray-700 text-sm">0</p>
+                        </div>
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm text-center">
+                            <p class="text-xs text-blue-600 mb-1">총 이자 수익</p>
+                            <p id="mc-res-interest" class="font-bold text-blue-700 text-sm">+0</p>
+                        </div>
+                        <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm text-center">
+                            <p id="mc-res-goal-label" class="text-xs text-indigo-600 mb-1">최종 자산</p>
+                            <p id="mc-res-total" class="font-bold text-indigo-700 text-sm">0</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center border-t pt-3">
+                        <p class="text-sm text-gray-500">
+                            총 수익률: <span id="mc-res-yield" class="font-bold text-green-600 text-lg">0%</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 게으름 비용 -->
+
+        <div id="tab-delay" class="tab-content">
+            <div class="mb-6 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 mb-2">⏰ 게으름 비용</h2>
+                    <p class="text-gray-600">오늘의 망설임이 미래의 가장 큰 비용입니다</p>
+                </div>
+                <!-- 보고서 생성 버튼 -->
+                <button onclick="openReportModal('delay')"
+                    class="bg-gradient-to-r from-red-500 to-pink-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-red-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <span>📊</span>
+                    비용 분석 보고서
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- 입력 섹션 -->
+                <div class="toss-card">
+                    <h3 class="text-lg font-bold mb-4">설정</h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">현재 나이</label>
+                                <div class="relative">
+                                    <input type="number" id="delay-age" value="45" class="toss-input text-right pr-10">
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">세</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">재무 목적</label>
+                                <input type="text" id="delay-goal" placeholder="예: 은퇴 자금" class="toss-input">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">목표 금액</label>
+                            <div class="relative">
+                                <input type="number" id="delay-amount" value="100000000"
+                                    class="toss-input text-right pr-10 text-lg font-bold">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">원</span>
+                            </div>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="setDelayAmount(50000000)"
+                                    class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg">5천만</button>
+                                <button onclick="setDelayAmount(100000000)"
+                                    class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg">1억</button>
+                                <button onclick="setDelayAmount(300000000)"
+                                    class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg">3억</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">총 준비 기간: <span
+                                    id="delay-years-text" class="text-blue-600">20년</span></label>
+                            <input type="range" id="delay-years" min="1" max="50" value="20"
+                                class="w-full accent-blue-600">
+                            <p class="text-xs text-gray-500 mt-1">목표 달성 나이: <span id="delay-end-age"
+                                    class="font-bold">65</span>세</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">지연 기간: <span
+                                    id="delay-delay-text" class="text-red-600">5년 뒤 시작</span></label>
+                            <input type="range" id="delay-delay" min="1" max="19" value="5"
+                                class="w-full accent-red-600">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">수익률: <span
+                                    id="delay-rate-text" class="text-green-600">6%</span></label>
+                            <input type="range" id="delay-rate" min="2" max="10" step="0.5" value="6"
+                                class="w-full accent-green-600 ">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 결과 비교 -->
+                <div class="space-y-4">
+                    <div class="toss-card bg-gradient-to-br from-blue-50 to-white border-blue-100">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-blue-900">✅ 지금 (<span id="delay-now-age">45</span>세) 시작하면
+                            </h4>
+                            <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded font-bold">BEST</span>
+                        </div>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 mb-1">월 저축액 (<span id="delay-now-years">20</span>년)
+                            </p>
+                            <p class="text-3xl font-black text-blue-700 toss-number" id="delay-now-monthly">0원
                             </p>
                         </div>
-
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">자산 성장 추이</h3>
-                            <div className="flex gap-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-royal-500"></span>
-                                    <span className="text-xs font-bold text-slate-500">Plan A</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-bronze-500"></span>
-                                    <span className="text-xs font-bold text-slate-500">Plan B</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="h-80 pb-4">
-                            <canvas ref={chartRef}></canvas>
+                        <div class="pt-3 border-t border-blue-100">
+                            <p class="text-xs text-gray-500">총 불입원금</p>
+                            <p class="text-lg font-bold text-blue-600" id="delay-now-total">0원</p>
                         </div>
                     </div>
 
-                    {/* RESTORED: Detailed Data Table */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                            <h3 className="text-sm font-bold text-slate-700">Detailed Breakdown</h3>
-                            <span className="text-[10px] text-slate-400 border border-slate-200 bg-white px-2 py-0.5 rounded">Unit: KRW</span>
+                    <div class="toss-card bg-gradient-to-br from-red-50 to-white border-red-100">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-red-900">⚠️ <span id="delay-delay-years">5</span>년 뒤
+                                (<span id="delay-delay-age">50</span>세) 시작하면</h4>
+                            <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded font-bold">WARNING</span>
                         </div>
-                        <div className="overflow-x-auto max-h-[300px] overflow-y-auto custom-scroll">
-                            <table className="w-full text-right text-sm whitespace-nowrap custom-table">
-                                <thead className="text-xs uppercase tracking-wide text-slate-400">
-                                    <tr>
-                                        <th className="py-3 px-6 text-center">Age</th>
-                                        <th className="py-3 px-6 text-royal-600 border-b-2 border-royal-100">Plan A Total</th>
-                                        <th className="py-3 px-6 text-bronze-600 border-b-2 border-bronze-100">Plan B Total</th>
-                                        <th className="py-3 px-6 font-bold text-navy-900 bg-slate-50">Gap</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="font-mono text-slate-600 divide-y divide-slate-50">
-                                    <tr className="bg-slate-50/30 italic text-slate-400">
-                                        <td className="py-2 px-6 text-center">{state.age}세 (Start)</td>
-                                        <td className="py-2 px-6">{formatMoney(state.principal)}</td>
-                                        <td className="py-2 px-6">{formatMoney(state.principal)}</td>
-                                        <td className="py-2 px-6">-</td>
-                                    </tr>
-                                    {results.map((d) => (
-                                        <tr key={d.year} className={`hover:bg-slate-50 transition-colors ${d.year % 5 === 0 ? 'bg-slate-50/50 font-medium' : ''}`}>
-                                            <td className="py-2 px-6 text-center text-xs">
-                                                <span className="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500">{d.currentAge}세</span>
-                                            </td>
-                                            <td className="py-2 px-6 text-royal-700">{formatMoney(d.totalA)}</td>
-                                            <td className="py-2 px-6 text-bronze-700">{formatMoney(d.totalB)}</td>
-                                            <td className="py-2 px-6 font-bold text-navy-900 bg-slate-50/30">+{formatMoney(d.diff)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 mb-1">월 저축액 (<span id="delay-remain-years">15</span>년)
+                            </p>
+                            <p class="text-3xl font-black text-red-700 toss-number" id="delay-delay-monthly">0원
+                            </p>
+                        </div>
+                        <div class="pt-3 border-t border-red-100">
+                            <p class="text-xs text-gray-500">총 불입원금</p>
+                            <p class="text-lg font-bold text-red-600" id="delay-delay-total">0원</p>
                         </div>
                     </div>
-                    
-                    {/* RESTORED: Footer Disclaimer */}
-                     <div className="text-center py-6 border-t border-slate-200 mt-8">
-                        <p className="text-[10px] text-slate-400 leading-relaxed">
-                            본 시뮬레이터 결과는 단순 예시이며 미래 수익을 보장하지 않습니다.<br/>
-                            실제 투자 결과는 시장 상황, 세금, 수수료 등에 따라 달라질 수 있습니다.
-                        </p>
+
+                    <div class="toss-card bg-gradient-to-br from-gray-900 to-gray-800 text-white text-center py-8">
+                        <p class="text-sm text-gray-400 mb-2">게으름 비용 (<span id="delay-val">5</span>년 지연)</p>
+                        <p class="text-4xl font-black text-yellow-400 toss-number mb-2" id="delay-cost">0원</p>
+                        <p class="text-xs text-gray-400">더 내야 하는 돈</p>
                     </div>
                 </div>
-            );
-        };
+            </div>
+        </div>
 
-        // ==========================================
-        // 2. Financial Sales Master Component
-        // ==========================================
-        const SalesMaster = () => {
-            const [activeTab, setActiveTab] = useState('compound');
-            
-            // Sub-components state logic
-            // Compound
-            const [ccState, setCcState] = useState({ age: 45, goal: '내 집 마련', save: 300000, rate: 5, years: 10 });
-            const compoundChartRef = useRef(null);
-            const compoundChartInstance = useRef(null);
 
-            // Delay
-            const [cdState, setCdState] = useState({ age: 45, goal: '은퇴 자금', amount: 100000000, years: 20, delay: 5, rate: 6 });
+        <!-- Tab 3: 은퇴 설계 -->
+        <!-- Tab 3: 은퇴 설계 (황금 거위) -->
+        <div id="tab-retirement" class="tab-content active">
+            <div class="mb-6 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 mb-2">🎯 황금 거위 만들기</h2>
+                    <p class="text-gray-600">원금은 지키고 배당으로만 평생 월급 받기 (연 7% 배당 기준)</p>
+                </div>
+                <!-- 보고서 생성 버튼 -->
+                <button onclick="openReportModal('retirement')"
+                    class="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-amber-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                    <span>📊</span>
+                    은퇴 플랜 보고서
+                </button>
+            </div>
 
-            // Retirement
-            const [rpState, setRpState] = useState({ age: 40, retireAge: 65, pension: 3000000, saveYears: 10, saveRate: 5, deferYears: 15, deferRate: 5 });
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 입력 섹션 -->
+                <div class="space-y-6">
+                    <!-- 1. 은퇴 목표 설정 -->
+                    <div class="toss-card border-l-4 border-blue-500">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div
+                                class="w-6 h-6 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                1</div>
+                            <h3 class="text-lg font-bold text-gray-900">은퇴 목표 설정</h3>
+                        </div>
 
-            // --- Compound Logic ---
-            useEffect(() => {
-                if (activeTab === 'compound' && compoundChartRef.current) {
-                    const data = [];
-                    for (let i = 1; i <= ccState.years; i++) {
-                        const monthlyRate = ccState.rate / 100 / 12;
-                        const fv = ccState.save * ((Math.pow(1 + monthlyRate, i * 12) - 1) / monthlyRate);
-                        const principal = ccState.save * 12 * i;
-                        data.push({ age: ccState.age + i, principal, interest: fv - principal });
-                    }
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">현재 나이</label>
+                                <input type="number" id="ret-age" value="40"
+                                    class="toss-input text-center text-lg font-bold">
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">은퇴 나이</label>
+                                <input type="number" id="ret-retire-age" value="65"
+                                    class="toss-input text-center text-lg font-bold">
+                            </div>
+                        </div>
 
-                    const ctx = compoundChartRef.current.getContext('2d');
-                    if (compoundChartInstance.current) compoundChartInstance.current.destroy();
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                            <label class="block text-xs font-bold text-blue-900 mb-2">💰 희망 월 수령액</label>
+                            <div class="relative">
+                                <input type="number" id="ret-pension" value="3000000" step="100000"
+                                    class="toss-input text-right pr-10 text-xl font-bold text-blue-700 bg-white">
+                                <span
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">원</span>
+                            </div>
+                        </div>
 
-                    compoundChartInstance.current = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: data.map(d => `${d.age}세`),
-                            datasets: [
-                                { label: '원금', data: data.map(d => d.principal), backgroundColor: '#94a3b8', stack: 'stack1' },
-                                { label: '이자', data: data.map(d => d.interest), backgroundColor: '#3b82f6', stack: 'stack1' }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: { x: { stacked: true, grid: { display: false } }, y: { display: false, stacked: true } }
-                        }
-                    });
-                }
-                return () => { if (compoundChartInstance.current) compoundChartInstance.current.destroy(); };
-            }, [activeTab, ccState]);
-
-            const ccResult = useMemo(() => {
-                const monthlyRate = ccState.rate / 100 / 12;
-                const totalMonths = ccState.years * 12;
-                const fv = ccState.save * ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate);
-                const principal = ccState.save * totalMonths;
-                return { principal, total: fv, interest: fv - principal };
-            }, [ccState]);
-
-            // --- Delay Logic ---
-            const cdResult = useMemo(() => {
-                const calculatePMT = (target, r, n) => {
-                    if (n <= 0) return 0;
-                    const monthlyRate = r / 100 / 12;
-                    const factor = ((Math.pow(1 + monthlyRate, n * 12) - 1) / monthlyRate);
-                    return target / factor;
-                };
-                const nowPayment = calculatePMT(cdState.amount, cdState.rate, cdState.years);
-                const remainYears = cdState.years - cdState.delay;
-                const delayedPayment = calculatePMT(cdState.amount, cdState.rate, remainYears);
-                return {
-                    nowPayment,
-                    nowTotal: nowPayment * 12 * cdState.years,
-                    delayedPayment,
-                    delayedTotal: delayedPayment * 12 * remainYears,
-                    cost: (delayedPayment * 12 * remainYears) - (nowPayment * 12 * cdState.years)
-                };
-            }, [cdState]);
-
-            // --- Retirement Logic ---
-            const rpResult = useMemo(() => {
-                const targetCorpus = (rpState.pension * 12) / 0.07; // 7% dividend rule
-                const requiredFVSave = targetCorpus / Math.pow(1 + rpState.deferRate / 100, rpState.deferYears);
-                const monthlyRate = rpState.saveRate / 100 / 12;
-                const factor = (Math.pow(1 + monthlyRate, rpState.saveYears * 12) - 1) / monthlyRate;
-                const requiredMonthly = requiredFVSave / factor;
-                return { targetCorpus, requiredFVSave, requiredMonthly };
-            }, [rpState]);
-
-            return (
-                <div className="space-y-6 animate-fade-in pb-10">
-                    {/* Tab Navigation */}
-                    <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 w-full md:w-fit overflow-x-auto">
-                        {[
-                            { id: 'compound', label: '복리 시뮬레이터', icon: TrendingUp },
-                            { id: 'delay', label: '게으름 비용 (Delay Cost)', icon: Clock },
-                            { id: 'retirement', label: '황금거위 은퇴설계', icon: Umbrella }
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-navy-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-                            >
-                                <tab.icon className="w-4 h-4" /> {tab.label}
-                            </button>
-                        ))}
+                        <div class="mt-3 bg-gradient-to-r from-blue-500 to-indigo-600 p-4 rounded-xl text-center">
+                            <p class="text-xs text-white/80 mb-1 font-semibold">배당률 7% 기준 필요 목돈</p>
+                            <p class="text-2xl font-black text-white toss-number" id="ret-target">0원</p>
+                        </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        {/* 1. Compound */}
-                        {activeTab === 'compound' && (
-                            <div className="grid md:grid-cols-3 gap-8">
-                                <div className="space-y-4">
-                                    {/* Added Age Input */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-1">현재 나이</label>
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="tel" 
-                                                value={ccState.age === 0 ? '' : ccState.age} 
-                                                onChange={(e) => {
-                                                    let clean = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
-                                                    if (clean === '') clean = '0';
-                                                    setCcState({...ccState, age: Number(clean)})
-                                                }} 
-                                                className="w-full border rounded-lg p-2 font-medium text-right" 
-                                            />
-                                            <span className="text-slate-500 font-bold whitespace-nowrap w-4">세</span>
-                                        </div>
-                                    </div>
+                    <!-- 2. 저축 & 증식 플랜 -->
+                    <div class="toss-card border-l-4 border-green-500">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div
+                                class="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                2</div>
+                            <h3 class="text-lg font-bold text-gray-900">저축 & 증식 플랜</h3>
+                        </div>
 
-                                    {/* Modified Goal Input */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-1">재무 목적</label>
-                                        <input 
-                                            type="text" 
-                                            value={ccState.goal} 
-                                            onChange={(e) => setCcState({...ccState, goal: e.target.value})} 
-                                            className="w-full border rounded-lg p-2 font-medium placeholder-slate-300" 
-                                            placeholder="예 : 은퇴,교육,주택자금" 
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-1">월 저축액</label>
-                                        <input type="text" value={formatMoney(ccState.save)} onChange={(e) => setCcState({...ccState, save: parseMoney(e.target.value)})} className="w-full border rounded-lg p-2 font-mono text-right" />
-                                        <input type="range" min="100000" max="5000000" step="50000" value={ccState.save} onChange={(e) => setCcState({...ccState, save: Number(e.target.value)})} className="w-full mt-2 accent-royal-600" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-1">수익률 ({ccState.rate}%)</label>
-                                        <input type="range" min="1" max="15" step="0.5" value={ccState.rate} onChange={(e) => setCcState({...ccState, rate: Number(e.target.value)})} className="w-full accent-green-600" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 mb-1">기간 ({ccState.years}년)</label>
-                                        <input type="range" min="5" max="40" step="1" value={ccState.years} onChange={(e) => setCcState({...ccState, years: Number(e.target.value)})} className="w-full accent-purple-600" />
-                                        <p className="text-xs text-purple-600 mt-1 text-right">예상 만기 나이: {ccState.age + ccState.years}세</p>
-                                    </div>
-                                </div>
-                                <div className="md:col-span-2 bg-slate-50 rounded-xl p-4">
-                                    <div className="h-60 mb-4">
-                                        <canvas ref={compoundChartRef}></canvas>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-4 text-center">
-                                        <div className="bg-white p-3 rounded border border-slate-200">
-                                            <p className="text-xs text-slate-500">원금</p>
-                                            <p className="font-bold text-slate-700">{formatMoney(ccResult.principal)}</p>
-                                        </div>
-                                        <div className="bg-blue-50 p-3 rounded border border-blue-100">
-                                            <p className="text-xs text-blue-500">이자</p>
-                                            <p className="font-bold text-blue-700">+{formatMoney(ccResult.interest)}</p>
-                                        </div>
-                                        <div className="bg-indigo-50 p-3 rounded border border-indigo-100">
-                                            <p className="text-xs text-indigo-500">{ccState.goal ? ccState.goal : '최종 자산'}</p>
-                                            <p className="font-bold text-indigo-700">{formatMoney(ccResult.total)}</p>
-                                        </div>
-                                    </div>
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-bold text-sm text-green-700 flex items-center gap-1">
+                                    <span class="text-lg">🌱</span>
+                                    A. 모으는 기간
+                                </label>
+                                <span id="ret-save-badge"
+                                    class="text-xs font-bold bg-green-100 text-green-800 px-2 py-1 rounded">10년</span>
+                            </div>
+                            <input type="range" id="ret-save-years" min="1" max="30" value="10"
+                                class="w-full h-2 accent-green-600 mb-2">
+                            <div class="bg-green-50 p-2 rounded flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-700">기대 수익률</span>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="ret-save-rate" value="5"
+                                        class="w-16 p-1 border border-green-300 rounded text-right text-sm font-bold">
+                                    <span class="text-sm font-bold text-green-700">%</span>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        {/* 2. Delay Cost */}
-                        {activeTab === 'delay' && (
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-600">현재 나이</label>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <input 
-                                                type="tel" 
-                                                value={cdState.age === 0 ? '' : cdState.age} 
-                                                onChange={(e) => {
-                                                    let clean = e.target.value.replace(/[^0-9]/g, '').replace(/^0+(?!$)/, '');
-                                                    if (clean === '') clean = '0';
-                                                    setCdState({...cdState, age: Number(clean)})
-                                                }}
-                                                className="w-full border p-2 rounded text-right font-bold text-lg" 
-                                            />
-                                            <span className="text-sm">세</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-600">목표 금액</label>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <input type="text" value={formatMoney(cdState.amount)} onChange={(e) => setCdState({...cdState, amount: parseMoney(e.target.value)})} className="w-full border p-2 rounded text-right font-bold text-lg" />
-                                            <span className="text-sm">원</span>
-                                        </div>
-                                        {/* RESTORED: Quick Amount Buttons */}
-                                        <div className="flex gap-2">
-                                            {[50000000, 100000000, 300000000].map(amt => (
-                                                <button key={amt} onClick={() => setCdState({...cdState, amount: amt})} className="flex-1 bg-slate-100 text-xs py-1.5 rounded hover:bg-slate-200 text-slate-600 font-medium">
-                                                    {(amt/100000000) >= 1 ? (amt/100000000) + '억' : (amt/10000) + '만'}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-slate-600">준비 기간: {cdState.years}년</label>
-                                        <input type="range" min="10" max="40" value={cdState.years} onChange={(e) => setCdState({...cdState, years: Number(e.target.value)})} className="w-full accent-blue-600" />
-                                        <p className="text-xs text-right text-slate-400">목표 달성: {cdState.age + cdState.years}세</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-bold text-red-600">지연 기간: {cdState.delay}년 늦게 시작</label>
-                                        <input type="range" min="1" max={cdState.years - 1} value={cdState.delay} onChange={(e) => setCdState({...cdState, delay: Number(e.target.value)})} className="w-full accent-red-600" />
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-blue-800 font-bold text-sm flex items-center gap-1"><CheckCircle className="w-4 h-4"/> 지금 시작하면 ({cdState.age}세)</span>
-                                            <span className="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded font-bold">BEST</span>
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-xs text-blue-600">월 저축액</p>
-                                                <p className="text-xl font-bold text-blue-900">{formatMoney(cdResult.nowPayment)}원</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-blue-500">총 납입금</p>
-                                                <p className="font-bold text-blue-700">{formatMoney(cdResult.nowTotal)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-red-50 p-4 rounded-xl border border-red-100">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-red-800 font-bold text-sm flex items-center gap-1"><AlertCircle className="w-4 h-4"/> {cdState.delay}년 뒤 시작하면 ({cdState.age + cdState.delay}세)</span>
-                                            <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded font-bold">WARNING</span>
-                                        </div>
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <p className="text-xs text-red-600">월 저축액</p>
-                                                <p className="text-xl font-bold text-red-900">{formatMoney(cdResult.delayedPayment)}원</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-red-500">총 납입금</p>
-                                                <p className="font-bold text-red-700">{formatMoney(cdResult.delayedTotal)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-navy-900 text-white p-4 rounded-xl text-center shadow-lg">
-                                        <p className="text-slate-300 text-xs mb-1">게으름의 대가 (추가 비용)</p>
-                                        <p className="text-2xl font-bold text-bronze-500">+{formatMoney(cdResult.cost)}원</p>
-                                        <p className="text-[10px] text-slate-400">더 내야 목표를 달성할 수 있습니다.</p>
-                                    </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="font-bold text-sm text-purple-700 flex items-center gap-1">
+                                    <span class="text-lg">🚀</span>
+                                    B. 불리는 기간
+                                </label>
+                                <span id="ret-defer-badge"
+                                    class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-1 rounded">15년</span>
+                            </div>
+                            <input type="range" id="ret-defer-years" min="0" max="30" value="15"
+                                class="w-full h-2 accent-purple-600 mb-2">
+                            <div class="bg-purple-50 p-2 rounded flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-700">기대 수익률</span>
+                                <div class="flex items-center gap-1">
+                                    <input type="number" id="ret-defer-rate" value="5"
+                                        class="w-16 p-1 border border-purple-300 rounded text-right text-sm font-bold">
+                                    <span class="text-sm font-bold text-purple-700">%</span>
                                 </div>
                             </div>
-                        )}
-
-                        {/* 3. Retirement Plan */}
-                        {activeTab === 'retirement' && (
-                            <div className="grid md:grid-cols-2 gap-8">
-                                <div className="space-y-6">
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                        <h4 className="font-bold text-slate-700 mb-4 text-sm flex items-center gap-2"><Briefcase className="w-4 h-4"/> 은퇴 목표</h4>
-                                        
-                                        {/* Added: Age Inputs */}
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-400 mb-1">현재 나이</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="tel" 
-                                                        value={rpState.age} 
-                                                        onChange={(e) => setRpState({...rpState, age: Number(e.target.value)})} 
-                                                        className="w-full border rounded-lg p-2 font-medium text-center" 
-                                                    />
-                                                    <span className="text-xs text-slate-500">세</span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-slate-400 mb-1">은퇴 나이</label>
-                                                <div className="flex items-center gap-2">
-                                                    <input 
-                                                        type="tel" 
-                                                        value={rpState.retireAge} 
-                                                        onChange={(e) => setRpState({...rpState, retireAge: Number(e.target.value)})} 
-                                                        className="w-full border rounded-lg p-2 font-medium text-center" 
-                                                    />
-                                                    <span className="text-xs text-slate-500">세</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="text-xs text-slate-500">희망 월 은퇴생활비</label>
-                                                <div className="relative">
-                                                    <input type="text" value={formatMoney(rpState.pension)} onChange={(e) => setRpState({...rpState, pension: parseMoney(e.target.value)})} className="w-full p-2 border border-blue-200 rounded font-bold text-right text-blue-900" />
-                                                    <span className="absolute left-3 top-2.5 text-xs text-blue-400">월</span>
-                                                </div>
-                                            </div>
-                                            <div className="bg-white p-2 rounded text-center border border-slate-100">
-                                                <p className="text-xs text-slate-500">필요한 현금 자산 (배당률 7% 기준)</p>
-                                                <p className="text-lg font-bold text-navy-900">{formatMoney(rpResult.targetCorpus)}원</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-4 bg-white rounded-xl border border-slate-200">
-                                        <h4 className="font-bold text-slate-700 mb-4 text-sm flex items-center gap-2"><TrendingUp className="w-4 h-4"/> 저축 플랜</h4>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <div className="flex justify-between text-xs mb-1"><span className="font-bold text-green-600">모으는 기간 (저축)</span> <span>{rpState.saveYears}년</span></div>
-                                                <input type="range" min="1" max="30" value={rpState.saveYears} onChange={(e) => setRpState({...rpState, saveYears: Number(e.target.value)})} className="w-full accent-green-600" />
-                                            </div>
-                                            <div>
-                                                <div className="flex justify-between text-xs mb-1"><span className="font-bold text-purple-600">불리는 기간 (거치)</span> <span>{rpState.deferYears}년</span></div>
-                                                <input type="range" min="0" max="30" value={rpState.deferYears} onChange={(e) => setRpState({...rpState, deferYears: Number(e.target.value)})} className="w-full accent-purple-600" />
-                                            </div>
-                                            
-                                            {/* Time Validation Message */}
-                                            {(rpState.saveYears + rpState.deferYears) !== (rpState.retireAge - rpState.age) && (
-                                                <div className="flex items-start gap-2 text-xs text-orange-500 bg-orange-50 p-2 rounded">
-                                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                                    <span>
-                                                        은퇴까지 남은 기간({rpState.retireAge - rpState.age}년)과 플랜 기간({rpState.saveYears + rpState.deferYears}년)이 다릅니다.
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-navy-900 rounded-2xl p-6 text-white flex flex-col justify-center relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-purple-500 to-blue-500"></div>
-                                    <div className="text-center mb-8 z-10">
-                                        <p className="text-slate-400 text-sm mb-2">목표 달성을 위한 월 저축액</p>
-                                        <p className="text-4xl font-bold text-bronze-400">{formatMoney(rpResult.requiredMonthly)}원</p>
-                                        <p className="text-xs text-slate-500 mt-2">{rpState.saveYears}년 납입 후 {rpState.deferYears}년 거치 시</p>
-                                    </div>
-                                    
-                                    <div className="space-y-3 text-sm z-10">
-                                        <div className="flex justify-between items-center bg-white/5 p-2 rounded">
-                                            <span className="flex items-center gap-2 text-green-400"><div className="w-2 h-2 rounded-full bg-green-500"></div> 1단계: 종잣돈 완성</span>
-                                            <span className="font-mono">{formatMoney(rpResult.requiredFVSave)}</span>
-                                        </div>
-                                        {rpState.deferYears > 0 && (
-                                            <div className="flex justify-between items-center bg-white/5 p-2 rounded">
-                                                <span className="flex items-center gap-2 text-purple-400"><div className="w-2 h-2 rounded-full bg-purple-500"></div> 2단계: 자산 증식</span>
-                                                <span className="font-mono">{formatMoney(rpResult.targetCorpus)}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex justify-between items-center bg-white/10 p-2 rounded border border-white/10">
-                                            <span className="flex items-center gap-2 text-blue-400"><div className="w-2 h-2 rounded-full bg-blue-500"></div> 3단계: 평생 월급</span>
-                                            <span className="font-bold text-bronze-400">월 {formatMoney(rpState.pension)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            );
+
+                <!-- 결과 섹션 -->
+                <div
+                    class="toss-card bg-gradient-to-br from-gray-900 to-gray-800 text-white flex flex-col justify-center p-5">
+                    <h4 class="text-gray-300 text-xs font-medium mb-4 text-center uppercase">목표 달성 전략</h4>
+
+                    <div class="mb-6 text-center bg-black/30 rounded-xl p-4 border border-yellow-500/30">
+                        <p class="text-yellow-300 text-xs font-semibold mb-1">💵 매월 이만큼만 저축하세요!</p>
+                        <span id="ret-monthly"
+                            class="text-4xl md:text-5xl font-black text-yellow-400 toss-number block">0원</span>
+                        <p class="text-gray-400 mt-2 text-xs"><span id="ret-save-text">10</span>년 동안 매월 납입 시</p>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-lg p-4 text-sm space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="flex items-center gap-2 font-bold text-green-400 text-sm">
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span>1단계: 목돈 만들기</span>
+                            </span>
+                            <span id="ret-fv-save" class="text-white font-bold text-sm">0 달성</span>
+                        </div>
+
+                        <div id="ret-step-2" class="flex justify-between items-center">
+                            <span class="flex items-center gap-2 font-bold text-purple-400 text-sm">
+                                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                                <span>2단계: 굴리기</span>
+                            </span>
+                            <span id="ret-target-2" class="text-white font-bold text-sm">0 달성</span>
+                        </div>
+
+                        <div class="flex justify-between items-center border-t border-gray-700 pt-3">
+                            <span class="flex items-center gap-2 font-bold text-blue-400 text-sm">
+                                <div class="w-3 h-3 rounded-full bg-blue-500"></div> 3단계: 평생 월급
+                            </span>
+                            <span id="ret-pension-result" class="text-yellow-400 font-bold text-sm">매월 0</span>
+                        </div>
+                    </div>
+
+                    <div id="ret-alert"
+                        class="mt-3 flex items-center gap-2 text-orange-400 text-xs bg-orange-400/10 px-3 py-2 rounded-lg hidden">
+                        ⚠️ 주의: 기간 합계가 은퇴까지 남은 시간과 다릅니다.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: 생애주기 -->
+        <div id="tab-lifecycle" class="tab-content">
+            <div class="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-900">📅 라이프 사이클</h2>
+                            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Life
+                                Cycle
+                                Financial Planner</p>
+                        </div>
+                    </div>
+                    <!-- 보고서 생성 버튼 -->
+                    <button onclick="openReportModal('lifecycle')"
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <span>📊</span>
+                        생애 보고서 생성
+                    </button>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                    인생의 각 단계별 재무 목표를 설정하고 타임라인으로 시각화하세요.
+                </p>
+            </div>
+
+            <!-- iframe Container -->
+            <div class="toss-card p-0 overflow-hidden" style="height: calc(100vh - 300px); min-height: 600px;">
+                <iframe id="iframe-lifecycle" src="life_cycle.html" class="w-full h-full border-0" title="생애주기 플래너"
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Tab 5: 은퇴 인출 -->
+        <div id="tab-withdrawal" class="tab-content">
+            <div class="mb-6 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-12 h-12 bg-cyan-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                                </path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-900">💳 은퇴 설계</h2>
+                            <p class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-0.5">
+                                Retirement
+                                Withdrawal Simulator</p>
+                        </div>
+                    </div>
+                    <!-- 보고서 생성 버튼 -->
+                    <button onclick="openReportModal('withdrawal')"
+                        class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:from-cyan-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <span>📊</span>
+                        인출 보고서 생성
+                    </button>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                    준비된 은퇴 자금으로 나이대별 실제 수령액과 실질 가치를 미리 확인하세요.
+                </p>
+            </div>
+
+            <!-- iframe Container -->
+            <div class="toss-card p-0 overflow-hidden" style="height: calc(100vh - 300px); min-height: 600px;">
+                <iframe id="iframe-withdrawal" src="./retirement_withdrawal.html" class="w-full h-full border-0"
+                    title="은퇴 인출 시뮬레이터">
+                </iframe>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-12 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 class="text-white font-bold text-lg mb-2">재무설계 마스터</h3>
+            <p class="text-sm mb-4">모든 재무 계산을 한 곳에서 간편하게</p>
+            <p class="text-xs text-gray-500">본 계산 결과는 예시이며 실제 투자 수익을 보장하지 않습니다.</p>
+            <p class="text-xs text-gray-600 mt-6">© 2024-2026 금쇼맘의 금융스쿨. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 고객 정보 입력 모달 -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50"
+        style="display: none;">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
+            <h2 class="text-2xl font-black text-gray-900 mb-6">📋 고객 정보 입력</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">고객명 *</label>
+                    <input type="text" id="modal-client-name" placeholder="홍길동"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">나이 *</label>
+                    <input type="number" id="modal-client-age" placeholder="45"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">분석 목적</label>
+                    <input type="text" id="modal-analysis-purpose" placeholder="예: 은퇴 자금 마련, 자산 성장"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeReportModal()"
+                    class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-bold hover:bg-gray-300 transition">
+                    취소
+                </button>
+                <button onclick="generateReport()"
+                    class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-bold hover:from-blue-700 hover:to-blue-600 transition">
+                    보고서 생성
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 탭 전환 =====
+        function switchTab(tabName, event) {
+            // 모든 탭 숨기기
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            // 탭 버튼 스타일
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-lg');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+
+            // currentTarget을 사용하여 실제 버튼 요소를 가져옴 (span 클릭 시에도 작동)
+            const clickedBtn = event.currentTarget;
+            clickedBtn.classList.remove('bg-gray-100', 'text-gray-600');
+            clickedBtn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-lg');
+        }
+
+        // ===== 복리 계산기 =====
+        const compState = {
+            age: 35,
+            duration: 30,
+            principal: 50000000,
+            rateA: 3.5,
+            rateB: 7.0,
+            data: []
         };
 
-        // ==========================================
-        // 3. Life Cycle Component
-        // ==========================================
-        const LifeCycle = () => {
-            const [currentAge, setCurrentAge] = useState(30);
-            const [goals, setGoals] = useState([
-                { id: 2, age: 35, label: '첫 주택 마련', amount: 300000000, category: '30s' },
-                { id: 3, age: 60, label: '은퇴 시작', amount: 500000000, category: 'retired' },
-            ]);
-            const [input, setInput] = useState({ years: 3, label: '', amount: '' });
-            const [selectedTab, setSelectedTab] = useState('30s');
-            const scrollRef = useRef(null);
+        const compEls = {
+            age: document.getElementById('comp-age'),
+            duration: document.getElementById('comp-duration'),
+            principal: document.getElementById('comp-principal'),
+            rateA: document.getElementById('comp-rateA'),
+            rateB: document.getElementById('comp-rateB'),
+            endAge: document.getElementById('comp-end-age'),
+            totalA: document.getElementById('comp-totalA'),
+            accRateA: document.getElementById('comp-accRateA'),
+            totalB: document.getElementById('comp-totalB'),
+            accRateB: document.getElementById('comp-accRateB'),
+            diff: document.getElementById('comp-diff'),
+            rateDiff: document.getElementById('comp-rateDiff'),
+            tableBody: document.getElementById('compTableBody'),
+            canvas: document.getElementById('compChart')
+        };
 
-            const AGE_GROUPS = [
-                { id: '30s', label: '30대 (가정형성기)', range: [30, 39], color: 'bg-green-100', borderColor: 'border-green-300', icon: Home },
-                { id: '40s', label: '40대 (자녀성장기)', range: [40, 49], color: 'bg-yellow-100', borderColor: 'border-yellow-300', icon: TrendingUp },
-                { id: '50s', label: '50대 (은퇴준비기)', range: [50, 59], color: 'bg-orange-100', borderColor: 'border-orange-300', icon: GraduationCap },
-                { id: 'retired', label: '은퇴 후 (노후생활기)', range: [60, 100], color: 'bg-gray-100', borderColor: 'border-gray-300', icon: Stethoscope },
-            ];
+        let compChart = null;
 
-            const COMMON_EVENTS = {
-                '30s': [
-                    { name: '주택 마련', defaultCost: 300000000, icon: Home },
-                    { name: '자녀교육자금', defaultCost: 10000000, icon: GraduationCap },
-                    { name: '가족 여행', defaultCost: 5000000, icon: Plane },
-                    { name: '은퇴자금', defaultCost: 20000000, icon: Coins },
-                ],
-                '40s': [
-                    { name: '자녀 사교육비', defaultCost: 20000000, icon: GraduationCap },
-                    { name: '주택 확장', defaultCost: 100000000, icon: Home },
-                    { name: '부채 상환', defaultCost: 30000000, icon: Coins },
-                    { name: '은퇴자금', defaultCost: 30000000, icon: Coins },
-                ],
-                '50s': [
-                    { name: '자녀 대학등록금', defaultCost: 40000000, icon: GraduationCap },
-                    { name: '자녀 독립자금', defaultCost: 50000000, icon: Umbrella },
-                    { name: '은퇴자금', defaultCost: 50000000, icon: Coins },
-                    { name: '대출상환', defaultCost: 50000000, icon: Coins },
-                ],
-                'retired': [
-                    { name: '은퇴 생활비(연)', defaultCost: 30000000, icon: Stethoscope },
-                    { name: '의료/간병비', defaultCost: 20000000, icon: Stethoscope },
-                    { name: '시니어타운', defaultCost: 200000000, icon: Home },
-                    { name: '상속/증여', defaultCost: 100000000, icon: Coins },
-                ],
-            };
+        const formatMoney = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n));
+        const parseMoney = (s) => parseInt(s.replace(/[^0-9]/g, '')) || 0;
 
-            const addGoal = () => {
-                if (!input.label) return;
-                const newGoal = {
-                    id: Date.now(),
-                    age: currentAge + Number(input.years),
-                    label: input.label,
-                    amount: parseMoney(input.amount) || 0,
-                    category: 'custom'
-                };
-                setGoals([...goals, newGoal].sort((a,b) => a.age - b.age));
-                setInput({ ...input, label: '', amount: '' });
-            };
+        function calculateCompound() {
+            compState.data = [];
+            const { principal, rateA, rateB, duration, age } = compState;
 
-            const addPreset = (event) => {
-                const newGoal = {
-                    id: Date.now(),
-                    age: currentAge + 3, // Default 3 years later
-                    label: event.name,
-                    amount: event.defaultCost,
-                    category: 'preset'
-                };
-                setGoals([...goals, newGoal].sort((a,b) => a.age - b.age));
+            compEls.endAge.textContent = age + duration;
+            compEls.rateDiff.textContent = Math.abs(rateB - rateA).toFixed(1);
+
+            for (let i = 1; i <= duration; i++) {
+                const totalA = principal * Math.pow((1 + rateA / 100), i);
+                const totalB = principal * Math.pow((1 + rateB / 100), i);
+
+                compState.data.push({
+                    year: i,
+                    currentAge: age + i,
+                    totalA,
+                    totalB,
+                    accRateA: (totalA / principal) * 100,
+                    accRateB: (totalB / principal) * 100,
+                    diff: totalB - totalA
+                });
             }
 
-            // Stacking Logic for Timeline
-            const layoutGoals = useMemo(() => {
-                const sorted = [...goals].sort((a, b) => a.age - b.age);
-                const occupancy = {};
-                return sorted.map(goal => {
-                    const start = goal.age;
-                    const end = start + 3; // Assume 3 years width visual
-                    let track = 0;
-                    while(true) {
-                        let isOccupied = false;
-                        for(let i=start; i<=end; i++) {
-                            if(occupancy[i]?.[track]) { isOccupied = true; break; }
-                        }
-                        if(!isOccupied) break;
-                        track++;
-                    }
-                    for(let i=start; i<=end; i++) {
-                        if(!occupancy[i]) occupancy[i] = [];
-                        occupancy[i][track] = true;
-                    }
-                    return { ...goal, track };
-                });
-            }, [goals]);
-
-            const timeline = Array.from({ length: 61 }, (_, i) => 30 + i); // 30 ~ 90
-
-            return (
-                <div className="flex flex-col lg:flex-row h-full pb-10 gap-4 animate-fade-in">
-                    {/* Control Panel */}
-                    <div className="w-full lg:w-80 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-                        <div className="p-5 border-b border-slate-100">
-                             <h3 className="font-bold text-navy-900 flex items-center gap-2"><Calendar className="w-5 h-5"/> 생애 이벤트 설정</h3>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                <label className="text-xs font-bold text-slate-400 block mb-1">현재 나이</label>
-                                <input type="number" value={currentAge} onChange={(e) => setCurrentAge(Number(e.target.value))} className="w-full p-2 rounded border border-slate-200 font-bold" />
-                            </div>
-
-                            {/* Age Group Selector for Presets */}
-                            <div>
-                                <label className="text-xs font-bold text-slate-400 block mb-2">생애주기별 추천 이벤트</label>
-                                <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
-                                    {AGE_GROUPS.map(g => (
-                                        <button key={g.id} onClick={() => setSelectedTab(g.id)} className={`px-2 py-1 rounded-full text-[10px] whitespace-nowrap border ${selectedTab === g.id ? 'bg-navy-900 text-white border-navy-900' : 'bg-white text-slate-500 border-slate-200'}`}>
-                                            {g.label.split(' ')[0]}
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {COMMON_EVENTS[selectedTab]?.map((evt, idx) => (
-                                        <button key={idx} onClick={() => addPreset(evt)} className="flex items-center gap-1 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:border-royal-400 hover:text-royal-600 shadow-sm transition-all">
-                                            <evt.icon className="w-3 h-3" /> {evt.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="border-t border-slate-100 pt-4 space-y-3">
-                                <label className="text-xs font-bold text-slate-400 block">직접 추가</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="text-[10px] text-slate-400">몇 년 뒤?</label>
-                                        <input type="number" value={input.years} onChange={(e) => setInput({...input, years: e.target.value})} className="w-full p-2 border rounded text-sm" />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] text-slate-400">예상 금액</label>
-                                        <input type="text" value={input.amount} onChange={(e) => setInput({...input, amount: e.target.value})} placeholder="원" className="w-full p-2 border rounded text-sm" />
-                                    </div>
-                                </div>
-                                <input type="text" value={input.label} onChange={(e) => setInput({...input, label: e.target.value})} placeholder="이벤트명 (예: 창업)" className="w-full p-2 border rounded text-sm" />
-                                <button onClick={addGoal} className="w-full bg-royal-600 hover:bg-royal-700 text-white font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-1 transition-colors">
-                                    <PlusCircle className="w-4 h-4" /> 추가
-                                </button>
-                            </div>
-
-                            <div className="border-t border-slate-100 pt-4">
-                                <label className="text-xs font-bold text-slate-400 block mb-2">목표 리스트</label>
-                                <div className="space-y-2 max-h-40 overflow-y-auto">
-                                    {goals.map(g => (
-                                        <div key={g.id} className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100 text-sm group">
-                                            <div>
-                                                <span className="bg-white px-1.5 py-0.5 rounded text-xs font-bold border border-slate-200 mr-2">{g.age}세</span>
-                                                <span className="text-slate-700">{g.label}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-slate-500 text-xs">{formatMoney(g.amount)}</span>
-                                                <button onClick={() => setGoals(goals.filter(x => x.id !== g.id))} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3"/></button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="p-4 bg-navy-900 text-white mt-auto">
-                            <p className="text-[10px] text-slate-400">총 필요 자금</p>
-                            <p className="text-lg font-bold">{formatMoney(goals.reduce((a,b) => a + b.amount, 0))}원</p>
-                        </div>
-                    </div>
-
-                    {/* Timeline */}
-                    <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative flex flex-col">
-                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-white z-10">
-                            <h3 className="font-bold text-slate-700 text-sm">Life Timeline</h3>
-                            <div className="flex gap-2 text-[10px]">
-                                {AGE_GROUPS.map(g => <span key={g.id} className={`px-2 py-1 rounded-full ${g.color} text-slate-600`}>{g.label.split(' ')[0]}</span>)}
-                            </div>
-                        </div>
-                        
-                        <div ref={scrollRef} className="flex-1 overflow-x-auto overflow-y-hidden relative custom-scroll">
-                            <div className="flex h-full min-w-max pt-16 pb-4 pl-4">
-                                {timeline.map((age, idx) => {
-                                    const group = AGE_GROUPS.find(g => age >= g.range[0] && age <= g.range[1]);
-                                    const isCurrent = age === currentAge;
-                                    const ageGoals = layoutGoals.filter(g => g.age === age);
-                                    
-                                    return (
-                                        <div key={age} className={`w-16 border-r border-slate-100 relative flex flex-col justify-end pb-2 items-center group ${group?.color || 'bg-white'} ${isCurrent ? 'bg-royal-100/50' : ''}`} style={{height: '100%'}}>
-                                            {isCurrent && (
-                                                <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-royal-500 z-0 -translate-x-1/2 border-l-2 border-royal-500 border-dashed">
-                                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-royal-600 text-white text-[10px] px-1 rounded whitespace-nowrap">현재</div>
-                                                </div>
-                                            )}
-                                            
-                                            {/* Goals Stacking */}
-                                            <div className="absolute bottom-12 w-full px-0.5 mb-2 z-10" style={{height: 'calc(100% - 60px)'}}>
-                                                {ageGoals.map(g => (
-                                                    <div 
-                                                        key={g.id} 
-                                                        className="absolute left-0.5 bg-white border-l-2 border-royal-500 shadow-md p-1 rounded-r text-[10px] text-left overflow-hidden hover:z-20 hover:scale-105 transition-transform cursor-pointer hover:bg-royal-50" 
-                                                        title={`${g.label}: ${formatMoney(g.amount)}원`}
-                                                        style={{
-                                                            bottom: `${g.track * 45}px`,
-                                                            width: '180px', // Span across 3-4 columns visual
-                                                            height: '40px',
-                                                            zIndex: 10
-                                                        }}
-                                                    >
-                                                        <div className="font-bold text-royal-700 truncate">{g.label}</div>
-                                                        <div className="text-slate-500 truncate font-mono">{formatMoney(g.amount)}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <span className={`text-xs ${isCurrent ? 'font-bold text-royal-600' : 'text-slate-400'} ${age % 5 === 0 ? 'font-bold text-slate-600' : ''}`}>{age}</span>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )
+            updateCompoundUI();
         }
 
-        // ==========================================
-        // 4. Retirement Withdrawal Component
-        // ==========================================
-        const WithdrawalSimulator = () => {
-            const [age, setAge] = useState(50);
-            const [funds, setFunds] = useState([
-                { id: 1, name: '국민연금', startAge: 65, endAge: 100, amount: 1500, inflation: true },
-                { id: 2, name: '개인연금', startAge: 60, endAge: 80, amount: 500, inflation: false },
-                { id: 3, name: '퇴직연금', startAge: 60, endAge: 70, amount: 1000, inflation: false },
-            ]);
-            const chartRef = useRef(null);
-            const chartInstance = useRef(null);
+        function updateCompoundUI() {
+            if (compState.data.length === 0) return;
+            const final = compState.data[compState.data.length - 1];
 
-            // Colors for funds
-            const FUND_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#6366f1'];
+            compEls.totalA.textContent = formatMoney(final.totalA) + '원';
+            compEls.accRateA.textContent = final.accRateA.toFixed(0);
 
-            const handleFundChange = (id, field, val) => {
-                setFunds(funds.map(f => f.id === id ? { ...f, [field]: val } : f));
-            };
+            compEls.totalB.textContent = formatMoney(final.totalB) + '원';
+            compEls.accRateB.textContent = final.accRateB.toFixed(0);
 
-            const toggleInflation = (id) => {
-                setFunds(funds.map(f => f.id === id ? { ...f, inflation: !f.inflation } : f));
-            };
+            compEls.diff.textContent = formatMoney(Math.abs(final.diff)) + '원';
 
-            const removeFund = (id) => {
-                setFunds(funds.filter(f => f.id !== id));
-            };
+            renderCompoundTable();
+            updateCompoundChart();
+        }
 
-            const analysis = useMemo(() => {
-                const data = [];
-                for (let a = age; a <= 90; a++) {
-                    let nominalTotal = 0;
-                    const fundValues = {};
+        function renderCompoundTable() {
+            compEls.tableBody.innerHTML = '';
 
-                    funds.forEach(f => {
-                        let amt = 0;
-                        if (a >= f.startAge && a <= f.endAge) {
-                            amt = f.amount;
-                            if (f.inflation) amt = amt * Math.pow(1.015, a - f.startAge); // 1.5% increase for pension
-                        }
-                        fundValues[f.id] = amt;
-                        nominalTotal += amt;
-                    });
-                    
-                    // PV calculation (Inflation 2%)
-                    const pv = nominalTotal / Math.pow(1.02, a - age);
-                    data.push({ age: a, nominalTotal, pv, fundValues });
-                }
-                return data;
-            }, [age, funds]);
+            // 시작 행
+            const startRow = `
+                <tr class="text-gray-400 italic">
+                    <td class="py-3 px-4 text-center">시작 (${compState.age}세)</td>
+                    <td class="py-3 px-4 text-right">${formatMoney(compState.principal)}</td>
+                    <td class="py-3 px-4 text-right">100%</td>
+                    <td class="py-3 px-4 text-right">${formatMoney(compState.principal)}</td>
+                    <td class="py-3 px-4 text-right">100%</td>
+                    <td class="py-3 px-4 text-right">-</td>
+                </tr>
+            `;
+            compEls.tableBody.insertAdjacentHTML('beforeend', startRow);
 
-            useEffect(() => {
-                if (chartRef.current) {
-                    const ctx = chartRef.current.getContext('2d');
-                    if (chartInstance.current) chartInstance.current.destroy();
+            compState.data.forEach((d, idx) => {
+                const isMilestone = d.year % 5 === 0;
+                const rowClass = isMilestone ? 'bg-blue-50 font-semibold' : 'hover:bg-gray-50';
 
-                    const datasets = funds.map((fund, idx) => ({
-                        type: 'bar',
-                        label: fund.name,
-                        data: analysis.map(d => d.fundValues[fund.id] || 0),
-                        backgroundColor: FUND_COLORS[idx % FUND_COLORS.length],
-                        stack: 'stack0',
-                        order: 2
-                    }));
+                const row = `
+                    <tr class="${rowClass}">
+                        <td class="py-3 px-4 text-center">
+                            <span class="text-gray-500">${d.year}년 후</span>
+                            <span class="ml-2 bg-gray-100 px-2 py-1 rounded font-semibold">${d.currentAge}세</span>
+                        </td>
+                        <td class="py-3 px-4 text-right text-blue-700 font-semibold">${formatMoney(d.totalA)}</td>
+                        <td class="py-3 px-4 text-right text-gray-500">${d.accRateA.toFixed(0)}%</td>
+                        <td class="py-3 px-4 text-right text-amber-700 font-semibold">${formatMoney(d.totalB)}</td>
+                        <td class="py-3 px-4 text-right text-gray-500">${d.accRateB.toFixed(0)}%</td>
+                        <td class="py-3 px-4 text-right font-bold text-gray-900">+${formatMoney(d.diff)}</td>
+                    </tr>
+                `;
+                compEls.tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
 
-                    datasets.push({
-                        type: 'line',
-                        label: '실질 가치 (물가반영)',
-                        data: analysis.map(d => d.pv),
-                        borderColor: '#1e293b', // navy-800
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0.4,
-                        order: 1
-                    });
+        function updateCompoundChart() {
+            const ctx = compEls.canvas.getContext('2d');
 
-                    chartInstance.current = new Chart(ctx, {
-                        data: {
-                            labels: analysis.map(d => `${d.age}세`),
-                            datasets: datasets
+            if (compChart) compChart.destroy();
+
+            compChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: compState.data.map(d => d.year + '년'),
+                    datasets: [
+                        {
+                            label: 'Plan A (보수적)',
+                            data: compState.data.map(d => d.totalA),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
                         },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: { mode: 'index', intersect: false },
-                            scales: {
-                                x: { grid: { display: false }, stacked: true },
-                                y: { grid: { borderDash: [4, 4] }, stacked: true } // Stacked true for correct axis scaling
-                            },
-                            plugins: {
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) label += ': ';
-                                            if (context.parsed.y !== null) {
-                                                label += Math.round(context.parsed.y).toLocaleString() + ' 천원';
-                                            }
-                                            return label;
-                                        }
-                                    }
+                        {
+                            label: 'Plan B (적극적)',
+                            data: compState.data.map(d => d.totalB),
+                            borderColor: '#d97706',
+                            backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: { size: 14, weight: 'bold' },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#191F28',
+                            bodyColor: '#4E5968',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: (ctx) => ' ' + ctx.dataset.label + ': ' + formatMoney(ctx.parsed.y) + '원'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            ticks: {
+                                callback: (value) => {
+                                    if (value >= 100000000) return (value / 100000000).toFixed(0) + '억';
+                                    if (value >= 10000) return (value / 10000).toFixed(0) + '만';
+                                    return value;
                                 }
                             }
                         }
-                    });
+                    }
                 }
-                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-            }, [analysis, funds]);
-
-            return (
-                <div className="grid lg:grid-cols-3 gap-6 animate-fade-in pb-10">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-navy-900 flex items-center gap-2"><List className="w-5 h-5"/> 자금원 설정 (단위: 천원)</h3>
-                                <div className="flex items-center gap-2 text-sm bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
-                                    <span>현재 나이</span>
-                                    <input type="number" value={age} onChange={(e) => setAge(Number(e.target.value))} className="w-12 text-center bg-white border rounded font-bold" />
-                                </div>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-slate-50 text-slate-500">
-                                        <tr>
-                                            <th className="p-2 text-left rounded-l-lg">항목명</th>
-                                            <th className="p-2 w-16">시작</th>
-                                            <th className="p-2 w-16">종료</th>
-                                            <th className="p-2 w-24 text-right">월 수령액</th>
-                                            <th className="p-2 w-20 text-center">물가연동</th>
-                                            <th className="p-2 w-8 rounded-r-lg"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {funds.map((f, idx) => (
-                                            <tr key={f.id} className="group hover:bg-slate-50">
-                                                <td className="p-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full shrink-0" style={{backgroundColor: FUND_COLORS[idx % FUND_COLORS.length]}}></div>
-                                                        <div className="w-full">
-                                                            <input type="text" value={f.name} onChange={(e) => handleFundChange(f.id, 'name', e.target.value)} className="w-full outline-none font-medium text-slate-700 bg-transparent" />
-                                                            {f.inflation && <span className="text-[10px] text-blue-500 block">매년 1.5% 증액</span>}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-2"><input type="number" value={f.startAge} onChange={(e) => handleFundChange(f.id, 'startAge', Number(e.target.value))} className="w-full text-center outline-none bg-white border border-slate-200 rounded px-1" /></td>
-                                                <td className="p-2"><input type="number" value={f.endAge} onChange={(e) => handleFundChange(f.id, 'endAge', Number(e.target.value))} className="w-full text-center outline-none bg-white border border-slate-200 rounded px-1" /></td>
-                                                <td className="p-2"><input type="number" value={f.amount} onChange={(e) => handleFundChange(f.id, 'amount', Number(e.target.value))} className="w-full text-right outline-none font-bold text-royal-600 bg-transparent" /></td>
-                                                <td className="p-2 text-center">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        checked={f.inflation} 
-                                                        onChange={() => toggleInflation(f.id)}
-                                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                                                    />
-                                                </td>
-                                                <td className="p-2 text-center"><button onClick={() => removeFund(f.id)} className="text-slate-300 hover:text-red-500"><X className="w-4 h-4"/></button></td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <button onClick={() => setFunds([...funds, { id: Date.now(), name: '추가 자금', startAge: 65, endAge: 85, amount: 0, inflation: false }])} className="mt-4 w-full py-2 border border-dashed border-slate-300 rounded-lg text-slate-400 text-sm hover:border-royal-400 hover:text-royal-500 transition-colors">+ 자금 추가</button>
-                        </div>
-                        
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-96">
-                             <div className="flex justify-between items-center mb-2">
-                                <h4 className="text-sm font-bold text-slate-600">나이대별 월 수령액 추이</h4>
-                                <div className="text-[10px] text-slate-400 flex gap-3">
-                                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-gray-200"></span>자금원(명목)</span>
-                                    <span className="flex items-center gap-1"><span className="w-4 h-0.5 bg-navy-800"></span>실질가치(물가 2%반영)</span>
-                                </div>
-                            </div>
-                            <div className="h-full pb-6">
-                                <canvas ref={chartRef}></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="bg-navy-900 text-white p-6 rounded-2xl shadow-lg">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase mb-4">65세 시점 예상 수령액</h4>
-                            <div className="mb-6">
-                                <p className="text-xs text-slate-400">명목 금액 (물가 미반영)</p>
-                                <p className="text-3xl font-black font-mono">{analysis.find(d => d.age === 65)?.nominalTotal.toLocaleString() || '-'} <span className="text-lg font-normal text-slate-400">천원</span></p>
-                            </div>
-                            <div className="pt-4 border-t border-white/10">
-                                <p className="text-xs text-bronze-400">실질 가치 (물가 2% 반영)</p>
-                                <p className="text-2xl font-bold font-mono">{Math.round(analysis.find(d => d.age === 65)?.pv || 0).toLocaleString()} <span className="text-sm font-normal text-slate-400">천원</span></p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[500px]">
-                            <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-600">상세 수령 계획표</div>
-                            <div className="overflow-y-auto custom-scroll flex-1">
-                                <table className="w-full text-xs text-right custom-table whitespace-nowrap">
-                                    <thead className="text-xs text-slate-500 bg-slate-50 sticky top-0 z-10">
-                                        <tr>
-                                            <th className="py-2 px-3 text-center border-b border-slate-200 sticky left-0 bg-slate-50 border-r">나이</th>
-                                            {funds.map((f, i) => (
-                                                <th key={f.id} className="py-2 px-3 border-b border-slate-200 font-medium truncate max-w-[80px]" style={{color: FUND_COLORS[i % FUND_COLORS.length]}}>{f.name}</th>
-                                            ))}
-                                            <th className="py-2 px-3 bg-blue-50/50 text-blue-900 border-b border-blue-100 border-l">합계(명목)</th>
-                                            <th className="py-2 px-3 bg-red-50/50 text-red-900 border-b border-red-100">합계(실질)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50 font-mono">
-                                        {analysis.map(d => (
-                                            <tr key={d.age} className="hover:bg-slate-50">
-                                                <td className="py-2 px-3 text-center font-sans font-bold text-slate-600 bg-slate-50/30 sticky left-0 border-r border-slate-100">{d.age}세</td>
-                                                {funds.map(f => (
-                                                    <td key={f.id} className="py-2 px-3 text-slate-500">
-                                                        {d.fundValues[f.id] > 0 ? Math.round(d.fundValues[f.id]).toLocaleString() : '-'}
-                                                    </td>
-                                                ))}
-                                                <td className="py-2 px-3 text-blue-700 font-bold bg-blue-50/20 border-l border-slate-100">{Math.round(d.nominalTotal).toLocaleString()}</td>
-                                                <td className="py-2 px-3 text-red-700 font-bold bg-red-50/20">{Math.round(d.pv).toLocaleString()}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )
+            });
         }
 
-        // ==========================================
-        // Main Application Shell
-        // ==========================================
-        const App = () => {
-            const [view, setView] = useState('wealth');
-            const [isMenuOpen, setIsMenuOpen] = useState(false);
+        // 이벤트 리스너
+        compEls.principal.addEventListener('input', (e) => {
+            const v = parseMoney(e.target.value);
+            if (!isNaN(v)) { compState.principal = v; calculateCompound(); }
+        });
+        compEls.principal.addEventListener('blur', (e) => {
+            e.target.value = formatMoney(compState.principal);
+        });
 
-            const MenuItems = [
-                { id: 'wealth', label: '자산 성장 시뮬레이터', icon: TrendingUp },
-                { id: 'sales', label: '종합 재무/은퇴 설계', icon: Briefcase },
-                { id: 'life', label: '라이프 사이클', icon: Calendar },
-                { id: 'withdrawal', label: '은퇴 인출 플랜', icon: Coins },
-            ];
+        ['age', 'duration'].forEach(key => {
+            compEls[key].addEventListener('input', (e) => {
+                let v = parseInt(e.target.value) || 0;
+                if (v < 0) v = 0;
+                compState[key] = v;
+                calculateCompound();
+            });
+        });
 
-            return (
-                <div className="flex h-screen bg-slate-50 w-full font-sans">
-                    {/* Mobile Menu Button */}
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden fixed top-4 right-4 z-50 bg-navy-900 text-white p-2 rounded-lg shadow-lg">
-                        {isMenuOpen ? <X size={20}/> : <Menu size={20}/>}
-                    </button>
+        ['rateA', 'rateB'].forEach(key => {
+            compEls[key].addEventListener('input', (e) => {
+                let v = parseFloat(e.target.value) || 0;
+                if (v < 0) v = 0;
+                compState[key] = v;
+                calculateCompound();
+            });
+        });
 
-                    {/* Sidebar */}
-                    <aside className={`
-                        fixed md:relative top-0 left-0 h-full w-64 bg-navy-900 text-white z-40 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none flex flex-col
-                        ${isMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                    `}>
-                        <div className="p-8 border-b border-navy-800">
-                            <div className="w-8 h-8 bg-royal-600 rounded-lg flex items-center justify-center text-white font-black mb-3 text-xl shadow-lg shadow-royal-900/50">1</div>
-                            <h1 className="text-lg font-bold tracking-tight">The One</h1>
-                            <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">Financial Suite</p>
-                        </div>
-                        
-                        <nav className="p-4 space-y-2 flex-1">
-                            {MenuItems.map(item => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => { setView(item.id); setIsMenuOpen(false); }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group
-                                        ${view === item.id 
-                                            ? 'bg-royal-600 text-white shadow-lg shadow-royal-900/20' 
-                                            : 'text-slate-400 hover:bg-navy-800 hover:text-white'
-                                        }
-                                    `}
-                                >
-                                    <item.icon size={18} className={`transition-transform group-hover:scale-110 ${view === item.id ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
-                                    {item.label}
-                                    {view === item.id && <ChevronRight size={14} className="ml-auto opacity-50"/>}
-                                </button>
-                            ))}
-                        </nav>
-                        
-                        <div className="p-6 bg-navy-950 border-t border-navy-800">
-                            <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                                &copy; The One Asset Management<br/>
-                                All rights reserved.
-                            </p>
-                        </div>
-                    </aside>
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            compEls.principal.value = formatMoney(compState.principal);
+            calculateCompound();
+            calculateDelay(); // 게으름 비용 초기화
+            updateMonthlyCompound(); // 월 저축 복리 초기화
+        });
 
-                    {/* Overlay for mobile */}
-                    {isMenuOpen && <div onClick={() => setIsMenuOpen(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden"></div>}
-
-                    {/* Main Content Area */}
-                    <main className="flex-1 h-full overflow-y-auto overflow-x-hidden relative flex flex-col">
-                        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20 px-8 py-4 flex items-center justify-between shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                            <h2 className="text-xl font-bold text-navy-900 flex items-center gap-2">
-                                {MenuItems.find(i => i.id === view)?.icon && React.createElement(MenuItems.find(i => i.id === view).icon, { className: "w-6 h-6 text-royal-600" })}
-                                {MenuItems.find(i => i.id === view)?.label}
-                            </h2>
-                            <div className="hidden md:flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Ready</span>
-                            </div>
-                        </header>
-
-                        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
-                            {view === 'wealth' && <WealthSimulator />}
-                            {view === 'sales' && <SalesMaster />}
-                            {view === 'life' && <LifeCycle />}
-                            {view === 'withdrawal' && <WithdrawalSimulator />}
-                        </div>
-                    </main>
-                </div>
-            );
+        // =================================================================
+        // 2. 월 저축 복리 계산기 (Monthly Compound Calculator)
+        // =================================================================
+        const mcEls = {
+            age: document.getElementById('mc-age'),
+            goal: document.getElementById('mc-goal'),
+            saveRange: document.getElementById('mc-save-range'),
+            saveInput: document.getElementById('mc-save-input'),
+            saveText: document.getElementById('mc-save-text'),
+            rate: document.getElementById('mc-rate'),
+            rateText: document.getElementById('mc-rate-text'),
+            years: document.getElementById('mc-years'),
+            yearsText: document.getElementById('mc-years-text'),
+            endAge: document.getElementById('mc-end-age'),
+            resPrincipal: document.getElementById('mc-res-principal'),
+            resInterest: document.getElementById('mc-res-interest'),
+            resGoalLabel: document.getElementById('mc-res-goal-label'),
+            resTotal: document.getElementById('mc-res-total'),
+            resYield: document.getElementById('mc-res-yield'),
+            canvas: document.getElementById('mcChart')
         };
 
-        const root = createRoot(document.getElementById('root'));
-        root.render(<App />);
+        let mcChart = null;
+
+        function updateMonthlyCompound() {
+            const age = Number(mcEls.age.value);
+            const save = Number(mcEls.saveInput.value);
+            const rate = Number(mcEls.rate.value);
+            const years = Number(mcEls.years.value);
+            const goalName = mcEls.goal.value;
+
+            // Sync inputs
+            mcEls.saveRange.value = save;
+            mcEls.saveText.textContent = formatMoney(save) + '원';
+            mcEls.rateText.textContent = rate + '%';
+            mcEls.yearsText.textContent = years + '년';
+            mcEls.endAge.textContent = `예상 만기 나이: ${age + years}세`;
+
+            // Calculate FV with monthly contributions (Future Value of Annuity)
+            const data = [];
+            for (let i = 1; i <= years; i++) {
+                const monthlyRate = rate / 100 / 12;
+                const months = i * 12;
+                const fv = save * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+                const principal = save * 12 * i;
+                data.push({
+                    age: age + i,
+                    year: i,
+                    principal: Math.round(principal),
+                    total: Math.round(fv),
+                    interest: Math.round(fv - principal)
+                });
+            }
+
+            const final = data[data.length - 1] || { principal: 0, total: 0, interest: 0 };
+            mcEls.resPrincipal.textContent = formatMoney(final.principal);
+            mcEls.resInterest.textContent = '+' + formatMoney(final.interest);
+            mcEls.resTotal.textContent = formatMoney(final.total);
+            const yieldPercent = final.principal > 0 ? ((final.interest / final.principal) * 100).toFixed(1) : 0;
+            mcEls.resYield.textContent = yieldPercent + '%';
+
+            if (goalName.trim()) {
+                mcEls.resGoalLabel.textContent = goalName + ' 달성 금액';
+            } else {
+                mcEls.resGoalLabel.textContent = '최종 자산';
+            }
+
+            // Update Chart
+            updateMCChart(data);
+        }
+
+        function updateMCChart(data) {
+            if (mcChart) mcChart.destroy();
+
+            const ctx = mcEls.canvas.getContext('2d');
+            mcChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.year + '년차'),
+                    datasets: [
+                        {
+                            label: '총 납입 원금',
+                            data: data.map(d => d.principal),
+                            borderColor: '#94a3b8',
+                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4
+                        },
+                        {
+                            label: '최종 자산 (복리 포함)',
+                            data: data.map(d => d.total),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    return context.dataset.label + ': ' + formatMoney(context.parsed.y) + '원';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => formatMoney(value) + '원'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners for Monthly Compound
+        mcEls.age.addEventListener('input', updateMonthlyCompound);
+        mcEls.goal.addEventListener('input', updateMonthlyCompound);
+        mcEls.saveRange.addEventListener('input', () => {
+            mcEls.saveInput.value = mcEls.saveRange.value;
+            updateMonthlyCompound();
+        });
+        mcEls.saveInput.addEventListener('input', updateMonthlyCompound);
+        mcEls.rate.addEventListener('input', updateMonthlyCompound);
+        mcEls.years.addEventListener('input', updateMonthlyCompound);
+
+        // =================================================================
+
+        const delayEls = {
+            age: document.getElementById('delay-age'),
+            goal: document.getElementById('delay-goal'),
+            amount: document.getElementById('delay-amount'),
+            years: document.getElementById('delay-years'),
+            yearsText: document.getElementById('delay-years-text'),
+            endAge: document.getElementById('delay-end-age'),
+            delay: document.getElementById('delay-delay'),
+            delayText: document.getElementById('delay-delay-text'),
+            rate: document.getElementById('delay-rate'),
+            rateText: document.getElementById('delay-rate-text'),
+            nowAge: document.getElementById('delay-now-age'),
+            nowYears: document.getElementById('delay-now-years'),
+            nowMonthly: document.getElementById('delay-now-monthly'),
+            nowTotal: document.getElementById('delay-now-total'),
+            delayYears: document.getElementById('delay-delay-years'),
+            delayAge: document.getElementById('delay-delay-age'),
+            remainYears: document.getElementById('delay-remain-years'),
+            delayMonthly: document.getElementById('delay-delay-monthly'),
+            delayTotal: document.getElementById('delay-delay-total'),
+            delayVal: document.getElementById('delay-val'),
+            cost: document.getElementById('delay-cost')
+        };
+
+        function setDelayAmount(val) {
+            delayEls.amount.value = val;
+            calculateDelay();
+        }
+
+        function calculatePMT(target, r, n) {
+            if (n <= 0) return 0;
+            const monthlyRate = r / 100 / 12;
+            const months = n * 12;
+            const factor = ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+            return target / factor;
+        }
+
+        function calculateDelay() {
+            const age = Number(delayEls.age.value) || 45;
+            const goalAmount = Number(delayEls.amount.value) || 100000000;
+            const years = Number(delayEls.years.value) || 20;
+            const rate = Number(delayEls.rate.value) || 6;
+            let delay = Number(delayEls.delay.value) || 5;
+
+            // 지연 제한
+            if (delay >= years) {
+                delay = years - 1;
+                delayEls.delay.value = delay;
+            }
+
+            delayEls.yearsText.textContent = years + '년';
+            delayEls.endAge.textContent = age + years;
+            delayEls.delayText.textContent = delay + '년 뒤 시작';
+            delayEls.rateText.textContent = rate + '%';
+
+            // 계산
+            const nowPayment = calculatePMT(goalAmount, rate, years);
+            const remainingYears = years - delay;
+            const delayedPayment = calculatePMT(goalAmount, rate, remainingYears);
+
+            const totalCostNow = nowPayment * 12 * years;
+            const totalCostDelayed = delayedPayment * 12 * remainingYears;
+            const lostMoney = totalCostDelayed - totalCostNow;
+
+            // 렌더링
+            delayEls.nowAge.textContent = age;
+            delayEls.nowYears.textContent = years;
+            delayEls.nowMonthly.textContent = formatMoney(nowPayment) + '원';
+            delayEls.nowTotal.textContent = formatMoney(totalCostNow) + '원';
+
+            delayEls.delayYears.textContent = delay;
+            delayEls.delayAge.textContent = age + delay;
+            delayEls.remainYears.textContent = remainingYears;
+            delayEls.delayMonthly.textContent = formatMoney(delayedPayment) + '원';
+            delayEls.delayTotal.textContent = formatMoney(totalCostDelayed) + '원';
+
+            delayEls.delayVal.textContent = delay;
+            delayEls.cost.textContent = formatMoney(lostMoney) + '원';
+        }
+
+        // 이벤트 리스너
+        ['age', 'goal', 'amount', 'years', 'delay', 'rate'].forEach(key => {
+            if (delayEls[key]) {
+                delayEls[key].addEventListener('input', calculateDelay);
+            }
+        });
+
+        //  ===== 은퇴 설계 계산기 =====
+        const retEls = {
+            age: document.getElementById('ret-age'),
+            retireAge: document.getElementById('ret-retire-age'),
+            pension: document.getElementById('ret-pension'),
+            target: document.getElementById('ret-target'),
+            saveYears: document.getElementById('ret-save-years'),
+            saveBadge: document.getElementById('ret-save-badge'),
+            saveRate: document.getElementById('ret-save-rate'),
+            deferYears: document.getElementById('ret-defer-years'),
+            deferBadge: document.getElementById('ret-defer-badge'),
+            deferRate: document.getElementById('ret-defer-rate'),
+            monthly: document.getElementById('ret-monthly'),
+            saveText: document.getElementById('ret-save-text'),
+            fvSave: document.getElementById('ret-fv-save'),
+            target2: document.getElementById('ret-target-2'),
+            pensionResult: document.getElementById('ret-pension-result'),
+            step2: document.getElementById('ret-step-2'),
+            alert: document.getElementById('ret-alert')
+        };
+
+        const DIVIDEND_RATE = 7;
+
+        function calculateRetirement() {
+            const age = Number(retEls.age.value) || 40;
+            const retireAge = Number(retEls.retireAge.value) || 65;
+            const monthlyPension = Number(retEls.pension.value) || 3000000;
+            const saveYears = Number(retEls.saveYears.value) || 10;
+            const saveRate = Number(retEls.saveRate.value) || 5;
+            const deferYears = Number(retEls.deferYears.value) || 15;
+            const deferRate = Number(retEls.deferRate.value) || 5;
+
+            // 배지 업데이트
+            retEls.saveBadge.textContent = saveYears + '년';
+            retEls.deferBadge.textContent = deferYears + '년';
+
+            // 목표 금액 계산
+            const targetCorpus = (monthlyPension * 12) / (DIVIDEND_RATE / 100);
+            retEls.target.textContent = formatMoney(targetCorpus) + '원';
+
+            // 거치 후 필요한 금액
+            const requiredFVSave = targetCorpus / Math.pow(1 + deferRate / 100, deferYears);
+
+            // 월 저축액
+            const monthlyRate = saveRate / 100 / 12;
+            const totalMonths = saveYears * 12;
+            const factor = (Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate;
+            const requiredMonthlySave = requiredFVSave / factor;
+
+            // 결과 렌더링
+            retEls.monthly.textContent = formatMoney(requiredMonthlySave) + '원';
+            retEls.saveText.textContent = saveYears;
+            retEls.fvSave.textContent = formatMoney(requiredFVSave) + ' 달성';
+            retEls.target2.textContent = formatMoney(targetCorpus) + ' 달성';
+            retEls.pensionResult.textContent = '매월 ' + formatMoney(monthlyPension);
+
+            // 2단계 표시 유무
+            if (deferYears > 0) {
+                retEls.step2.style.display = 'flex';
+            } else {
+                retEls.step2.style.display = 'none';
+            }
+
+            // 경고 메시지
+            const totalPlanYears = saveYears + deferYears;
+            const yearsUntilRetire = retireAge - age;
+            if (totalPlanYears !== yearsUntilRetire) {
+                retEls.alert.classList.remove('hidden');
+            } else {
+                retEls.alert.classList.add('hidden');
+            }
+        }
+
+        // 은퇴 설계 이벤트 리스너
+        Object.values(retEls).forEach(el => {
+            if (el && el.addEventListener) el.addEventListener('input', calculateRetirement);
+        });
+
+
+        // 은퇴 설계 초기화 추가
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateRetirement();
+        });
+
+
+        // =================================================================
+        // 고객 보고서 생성 기능
+        // =================================================================
+
+
+        let currentReportType = 'compound'; // 현재 선택된 보고서 타입
+        let pendingReportData = null; // 비동기 데이터 수신 대기용 변수
+
+        // 모달 열기
+        // 모달 열기
+        function openReportModal(reportType = 'compound') {
+            currentReportType = reportType;
+            const modal = document.getElementById('reportModal');
+            modal.style.display = 'flex';
+
+            // 기본값으로 현재 나이 설정
+            let currentAge;
+            if (reportType === 'compound') {
+                currentAge = compState.age;
+            } else if (reportType === 'monthly') {
+                currentAge = Number(document.getElementById('mc-age').value) || 45;
+            } else if (reportType === 'delay') {
+                currentAge = Number(document.getElementById('delay-age').value) || 45;
+            } else if (reportType === 'retirement') {
+                currentAge = Number(document.getElementById('ret-age').value) || 40;
+            } else if (reportType === 'lifecycle') {
+                currentAge = 30;
+            } else if (reportType === 'withdrawal') {
+                currentAge = 50;
+            }
+            document.getElementById('modal-client-age').value = currentAge;
+        }
+
+        // 모달 닫기
+        function closeReportModal() {
+            const modal = document.getElementById('reportModal');
+            modal.style.display = 'none';
+        }
+
+        // 보고서 생성
+        function generateReport() {
+            // 고객 정보 가져오기
+            const clientName = document.getElementById('modal-client-name').value.trim();
+            const clientAge = document.getElementById('modal-client-age').value.trim();
+            const purpose = document.getElementById('modal-analysis-purpose').value.trim() || '자산 성장 분석';
+
+            // 필수 입력값 검증
+            if (!clientName) {
+                alert('고객명을 입력해주세요.');
+                return;
+            }
+
+            if (!clientAge) {
+                alert('나이를 입력해주세요.');
+                return;
+            }
+
+            // 보고서 타입별 처리
+            let params, reportUrl;
+
+            if (currentReportType === 'compound') {
+                // 수익율 비교 보고서
+                if (compState.data.length === 0) {
+                    alert('먼저 수익율을 계산해주세요.');
+                    return;
+                }
+
+                const final = compState.data[compState.data.length - 1];
+
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    principal: compState.principal,
+                    duration: compState.duration,
+                    age: compState.age,
+                    rateA: compState.rateA,
+                    rateB: compState.rateB,
+                    totalA: final.totalA,
+                    totalB: final.totalB,
+                    accRateA: final.accRateA,
+                    accRateB: final.accRateB,
+                    diff: final.diff
+                });
+                reportUrl = 'report_compound.html';
+
+            } else if (currentReportType === 'monthly') {
+                // 복리의 마법 보고서
+                const age = Number(document.getElementById('mc-age').value);
+                const save = Number(document.getElementById('mc-save-input').value);
+                const rate = Number(document.getElementById('mc-rate').value);
+                const years = Number(document.getElementById('mc-years').value);
+
+                // 복리 계산
+                const monthlyRate = rate / 100 / 12;
+                const months = years * 12;
+                let total = 0;
+
+                for (let m = 0; m < months; m++) {
+                    total = (total + save) * (1 + monthlyRate);
+                }
+
+                const totalPrincipal = save * months;
+                const totalInterest = total - totalPrincipal;
+                const yieldRate = (totalInterest / totalPrincipal) * 100;
+
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    monthlySave: save,
+                    rate: rate,
+                    years: years,
+                    age: age,
+                    totalPrincipal: totalPrincipal,
+                    totalInterest: totalInterest,
+                    finalAmount: total,
+                    yieldRate: yieldRate
+                });
+                reportUrl = 'report_monthly.html';
+
+            } else if (currentReportType === 'delay') {
+                // 게으름 비용 보고서
+                const targetAmount = parseInt(document.getElementById('delay-amount').value) || 0;
+                const totalYears = parseInt(document.getElementById('delay-years').value) || 0;
+                const delayYears = parseInt(document.getElementById('delay-delay').value) || 0;
+                const rate = parseFloat(document.getElementById('delay-rate').value) || 0;
+
+                const nowMonthly = parseMoney(document.getElementById('delay-now-monthly').textContent);
+                const nowTotal = parseMoney(document.getElementById('delay-now-total').textContent);
+                const delayMonthly = parseMoney(document.getElementById('delay-delay-monthly').textContent);
+                const delayTotal = parseMoney(document.getElementById('delay-delay-total').textContent);
+                const delayCost = parseMoney(document.getElementById('delay-cost').textContent);
+
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    targetAmount, totalYears, delayYears, rate,
+                    nowMonthly, nowTotal, delayMonthly, delayTotal, delayCost
+                });
+                reportUrl = 'report_delay.html';
+
+            } else if (currentReportType === 'retirement') {
+                // 황금 거위 보고서
+                const retireAge = parseInt(document.getElementById('ret-retire-age').value) || 65;
+                const monthlyPension = parseInt(document.getElementById('ret-pension').value) || 0;
+                const targetAmount = parseMoney(document.getElementById('ret-target').textContent);
+
+                const saveYears = parseInt(document.getElementById('ret-save-years').value) || 10;
+                const saveRate = parseFloat(document.getElementById('ret-save-rate').value) || 5;
+
+                const deferYears = parseInt(document.getElementById('ret-defer-years').value) || 15;
+                const deferRate = parseFloat(document.getElementById('ret-defer-rate').value) || 5;
+
+                const monthlySave = parseMoney(document.getElementById('ret-monthly').textContent);
+                const stage1Amount = parseMoney(document.getElementById('ret-fv-save').textContent);
+                const stage2Amount = parseMoney(document.getElementById('ret-target-2').textContent);
+
+                params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    retireAge, monthlyPension, targetAmount,
+                    saveYears, saveRate,
+                    deferYears, deferRate,
+                    monthlySave, stage1Amount, stage2Amount
+                });
+                reportUrl = 'report_retirement.html';
+
+            } else if (currentReportType === 'lifecycle') {
+                pendingReportData = { clientName, clientAge, purpose };
+                const iframe = document.getElementById('iframe-lifecycle');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage('requestReportData', '*');
+                }
+                return;
+
+            } else if (currentReportType === 'withdrawal') {
+                pendingReportData = { clientName, clientAge, purpose };
+                const iframe = document.getElementById('iframe-withdrawal');
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage('requestReportData', '*');
+                }
+                return;
+            }
+
+            // 새 창에서 보고서 열기
+            window.open(`${reportUrl}?${params.toString()}`, '_blank', 'width=1024,height=768');
+
+            // 모달 닫기
+            closeReportModal();
+        }
+
+        // 모달 배경 클릭 시 닫기
+        document.getElementById('reportModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeReportModal();
+            }
+        });
+
+    </script>
+    <script>
+        // 메시지 수신 핸들러 (iframe 데이터 수신)
+        window.addEventListener('message', function (event) {
+            if (!pendingReportData) return;
+
+            if (event.data.type === 'lifecycleResponse') {
+                const { clientName, clientAge, purpose } = pendingReportData;
+                const { currentAge, goals, totalAmount } = event.data;
+
+                const goalsStr = encodeURIComponent(JSON.stringify(goals));
+
+                const params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    currentAge, totalAmount,
+                    goals: goalsStr
+                });
+
+                window.open(`report_lifecycle.html?${params.toString()}`, '_blank', 'width=1024,height=768');
+                closeReportModal();
+                pendingReportData = null;
+
+            } else if (event.data.type === 'withdrawalResponse') {
+                const { clientName, clientAge, purpose } = pendingReportData;
+                const { currentAge, funds, summaryNominal, summaryPV } = event.data;
+
+                const fundsStr = encodeURIComponent(JSON.stringify(funds));
+
+                const params = new URLSearchParams({
+                    clientName, clientAge, purpose,
+                    currentAge, summaryNominal, summaryPV,
+                    funds: fundsStr
+                });
+
+                window.open(`report_withdrawal.html?${params.toString()}`, '_blank', 'width=1024,height=768');
+                closeReportModal();
+                pendingReportData = null;
+            }
+        });
     </script>
 </body>
+
 </html>
