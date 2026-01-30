@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>재무 분석 보고서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: white;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        .report-header {
+            border-bottom: 4px solid #2563eb;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="p-8 max-w-4xl mx-auto">
+    <!-- 프린트 버튼 -->
+    <div class="no-print mb-6 text-right">
+        <button onclick="window.print()"
+            class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+            🖨️ 인쇄 / PDF 저장
+        </button>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="report-header">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 mb-2">재무 분석 보고서</h1>
+                <p class="text-sm text-gray-500">Financial Analysis Report</p>
+            </div>
+            <div class="text-right text-sm text-gray-600">
+                <p id="report-date"></p>
+                <p class="font-bold text-blue-600 mt-1">금쇼맘의 금융스쿨</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 고객 정보 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📋 고객 정보</h2>
+        <table class="data-table">
+            <tr>
+                <th class="w-1/4">고객명</th>
+                <td id="client-name"></td>
+                <th class="w-1/4">나이</th>
+                <td id="client-age"></td>
+            </tr>
+            <tr>
+                <th>분석 목적</th>
+                <td colspan="3" id="analysis-purpose"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 수익율 비교 분석 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📊 수익율 비교 분석</h2>
+
+        <!-- 입력 정보 요약 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">분석 조건</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600 mb-1">초기 투자 원금</p>
+                    <p class="text-2xl font-bold text-gray-900" id="principal-amount"></p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <p class="text-sm text-gray-600 mb-1">투자 기간</p>
+                    <p class="text-2xl font-bold text-gray-900" id="duration-years"></p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-800 mb-1">Plan A 수익률 (보수적)</p>
+                    <p class="text-2xl font-bold text-blue-700" id="rate-a"></p>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                    <p class="text-sm text-amber-800 mb-1">Plan B 수익률 (적극적)</p>
+                    <p class="text-2xl font-bold text-amber-700" id="rate-b"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 분석 결과 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">분석 결과</h3>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                    <p class="text-sm text-blue-800 mb-1">Plan A 최종 자산</p>
+                    <p class="text-xl font-black text-blue-700" id="result-total-a"></p>
+                    <p class="text-xs text-gray-600 mt-1">누적 수익률: <span id="result-rate-a"></span></p>
+                </div>
+                <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 text-center">
+                    <p class="text-sm text-amber-800 mb-1">Plan B 최종 자산</p>
+                    <p class="text-xl font-black text-amber-700" id="result-total-b"></p>
+                    <p class="text-xs text-gray-600 mt-1">누적 수익률: <span id="result-rate-b"></span></p>
+                </div>
+                <div class="highlight-box">
+                    <p class="text-sm text-blue-100 mb-1">차익</p>
+                    <p class="text-2xl font-black" id="result-diff"></p>
+                    <p class="text-xs text-blue-100 mt-1">Plan B - Plan A</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 차트 -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">자산 성장 추이</h3>
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <canvas id="reportChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- 상세 테이블 -->
+        <div class="page-break">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">연도별 상세 내역</h3>
+            <table class="data-table text-sm">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="text-center">연도</th>
+                        <th class="text-center">나이</th>
+                        <th class="text-right">Plan A 자산</th>
+                        <th class="text-right">Plan B 자산</th>
+                        <th class="text-right">차액</th>
+                    </tr>
+                </thead>
+                <tbody id="detail-table-body">
+                    <!-- JavaScript로 생성 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 권장 사항 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">💡 재무 설계사 권장 사항</h2>
+        <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span>분석 결과, <span class="font-bold text-blue-700">적극적 운용(Plan B)</span>이 장기적으로 <span
+                            id="recommendation-diff" class="font-bold"></span> 더 높은 수익을 제공합니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span>다만, 높은 수익률은 높은 변동성을 동반할 수 있으므로, 고객님의 리스크 성향과 투자 목표를 고려하여 결정하시기 바랍니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span>정기적인 포트폴리오 리밸런싱과 재무 상태 점검을 권장드립니다.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 면책 조항 -->
+    <div class="report-section text-xs text-gray-500 border-t pt-4 mt-8">
+        <p class="mb-2">
+            <strong>면책 조항:</strong> 본 보고서의 분석 결과는 입력된 가정을 기반으로 한 시뮬레이션이며, 실제 투자 수익을 보장하지 않습니다.
+            투자 결정 시에는 시장 상황, 개인의 재무 상태, 리스크 성향 등을 종합적으로 고려하시기 바랍니다.
+        </p>
+        <p class="text-center mt-4 text-gray-400">
+            © 2024-2026 금쇼맘의 금융스쿨. All rights reserved.
+        </p>
+    </div>
+
+    <script>
+        // URL 파라미터에서 데이터 가져오기
+        const params = new URLSearchParams(window.location.search);
+
+        // 날짜 설정
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // 데이터 파싱
+        const reportData = {
+            clientName: params.get('clientName') || '고객명',
+            clientAge: params.get('clientAge') || '-',
+            purpose: params.get('purpose') || '자산 성장 분석',
+            principal: parseInt(params.get('principal')) || 50000000,
+            duration: parseInt(params.get('duration')) || 30,
+            age: parseInt(params.get('age')) || 35,
+            rateA: parseFloat(params.get('rateA')) || 3.5,
+            rateB: parseFloat(params.get('rateB')) || 7.0,
+            totalA: parseInt(params.get('totalA')) || 0,
+            totalB: parseInt(params.get('totalB')) || 0,
+            accRateA: parseFloat(params.get('accRateA')) || 0,
+            accRateB: parseFloat(params.get('accRateB')) || 0,
+            diff: parseInt(params.get('diff')) || 0
+        };
+
+        const formatMoney = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n)) + '원';
+
+        // 고객 정보 표시
+        document.getElementById('client-name').textContent = reportData.clientName;
+        document.getElementById('client-age').textContent = reportData.clientAge + '세';
+        document.getElementById('analysis-purpose').textContent = reportData.purpose;
+
+        // 분석 조건 표시
+        document.getElementById('principal-amount').textContent = formatMoney(reportData.principal);
+        document.getElementById('duration-years').textContent = reportData.duration + '년';
+        document.getElementById('rate-a').textContent = reportData.rateA + '%';
+        document.getElementById('rate-b').textContent = reportData.rateB + '%';
+
+        // 결과 표시
+        document.getElementById('result-total-a').textContent = formatMoney(reportData.totalA);
+        document.getElementById('result-total-b').textContent = formatMoney(reportData.totalB);
+        document.getElementById('result-rate-a').textContent = reportData.accRateA.toFixed(0) + '%';
+        document.getElementById('result-rate-b').textContent = reportData.accRateB.toFixed(0) + '%';
+        document.getElementById('result-diff').textContent = formatMoney(reportData.diff);
+        document.getElementById('recommendation-diff').textContent = formatMoney(reportData.diff);
+
+        // 연도별 데이터 계산 및 테이블 생성
+        const yearlyData = [];
+        for (let i = 1; i <= reportData.duration; i++) {
+            const totalA = reportData.principal * Math.pow((1 + reportData.rateA / 100), i);
+            const totalB = reportData.principal * Math.pow((1 + reportData.rateB / 100), i);
+            yearlyData.push({
+                year: i,
+                age: reportData.age + i,
+                totalA,
+                totalB,
+                diff: totalB - totalA
+            });
+        }
+
+        // 테이블 생성 (5년 단위만)
+        const tableBody = document.getElementById('detail-table-body');
+        yearlyData.forEach((data, idx) => {
+            if (data.year % 5 === 0 || data.year === reportData.duration) {
+                const row = `
+                    <tr class="${data.year === reportData.duration ? 'bg-blue-50 font-bold' : ''}">
+                        <td class="text-center">${data.year}년</td>
+                        <td class="text-center">${data.age}세</td>
+                        <td class="text-right">${formatMoney(data.totalA)}</td>
+                        <td class="text-right">${formatMoney(data.totalB)}</td>
+                        <td class="text-right text-blue-600">+${formatMoney(data.diff)}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            }
+        });
+
+        // 차트 생성
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: yearlyData.map(d => d.year + '년'),
+                datasets: [
+                    {
+                        label: 'Plan A (보수적)',
+                        data: yearlyData.map(d => d.totalA),
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Plan B (적극적)',
+                        data: yearlyData.map(d => d.totalB),
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: (value) => {
+                                if (value >= 100000000) return (value / 100000000).toFixed(0) + '억';
+                                if (value >= 10000) return (value / 10000).toFixed(0) + '만';
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

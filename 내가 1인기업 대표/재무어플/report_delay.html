@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자 지연 비용 분석 보고서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: white;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        .report-header {
+            border-bottom: 4px solid #ef4444;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="p-8 max-w-4xl mx-auto">
+    <!-- 프린트 버튼 -->
+    <div class="no-print mb-6 text-right">
+        <button onclick="window.print()"
+            class="bg-red-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-red-700 transition">
+            🖨️ 인쇄 / PDF 저장
+        </button>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="report-header">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 mb-2">투자 지연 비용 분석</h1>
+                <p class="text-sm text-gray-500">Cost of Delay Analysis Report</p>
+            </div>
+            <div class="text-right text-sm text-gray-600">
+                <p id="report-date"></p>
+                <p class="font-bold text-red-600 mt-1">금쇼맘의 금융스쿨</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 고객 정보 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📋 고객 정보</h2>
+        <table class="data-table">
+            <tr>
+                <th class="w-1/4">고객명</th>
+                <td id="client-name"></td>
+                <th class="w-1/4">나이</th>
+                <td id="client-age"></td>
+            </tr>
+            <tr>
+                <th>재무 목적</th>
+                <td colspan="3" id="analysis-purpose"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 분석 조건 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📊 분석 조건</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p class="text-sm text-gray-600 mb-1">목표 금액</p>
+                <p class="text-2xl font-bold text-gray-900" id="target-amount"></p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-800 mb-1">총 준비 기간</p>
+                <p class="text-2xl font-bold text-blue-700" id="total-years"></p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <p class="text-sm text-red-800 mb-1">지연 기간</p>
+                <p class="text-2xl font-bold text-red-700" id="delay-years"></p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <p class="text-sm text-green-800 mb-1">예상 수익률</p>
+                <p class="text-2xl font-bold text-green-700" id="rate"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 분석 결과 비교 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">⚖️ 시나리오 비교</h2>
+
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <!-- 지금 시작 -->
+            <div class="border rounded-xl p-5 border-blue-200 bg-blue-50/50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-blue-900 text-lg">✅ 지금 바로 시작</h3>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold">BEST</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">준비 기간</span>
+                        <span class="font-bold text-gray-900" id="now-period"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">월 저축액</span>
+                        <span class="font-bold text-blue-600 text-lg" id="now-monthly"></span>
+                    </div>
+                    <div class="pt-3 border-t border-blue-200 flex justify-between">
+                        <span class="text-gray-700 font-semibold">총 납입 원금</span>
+                        <span class="font-black text-gray-900" id="now-total"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 지연 시작 -->
+            <div class="border rounded-xl p-5 border-red-200 bg-red-50/50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-red-900 text-lg">⚠️ <span id="delay-val"></span>년 뒤 시작</h3>
+                    <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold">WARNING</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">준비 기간</span>
+                        <span class="font-bold text-gray-900" id="delay-period"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">월 저축액</span>
+                        <span class="font-bold text-red-600 text-lg" id="delay-monthly"></span>
+                    </div>
+                    <div class="pt-3 border-t border-red-200 flex justify-between">
+                        <span class="text-gray-700 font-semibold">총 납입 원금</span>
+                        <span class="font-black text-gray-900" id="delay-total"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 게으름 비용 결과 -->
+        <div class="highlight-box mb-8">
+            <p class="text-red-100 mb-2 font-medium">당신이 치러야 할 "게으름 비용"</p>
+            <p class="text-4xl font-black mb-2" id="delay-cost"></p>
+            <p class="text-sm text-red-100 opacity-90">늦게 시작하면 이만큼 더 내야 목표를 달성할 수 있습니다.</p>
+        </div>
+
+        <!-- 차트 -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-sm font-bold text-gray-500 mb-3 text-center">총 납입 원금 비교</h3>
+            <canvas id="reportChart" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+
+    <!-- 권장 사항 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">💡 재무 설계사 조언</h2>
+        <div class="bg-gray-50 p-6 rounded-lg border-l-4 border-gray-500">
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-start gap-2">
+                    <span class="text-red-600 font-bold">!</span>
+                    <span><span class="font-bold text-red-600">시간은 돈입니다.</span> 투자를 미루는 모든 순간이 비용으로 돌아옵니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span>지금 시작하면 월 <span id="rec-now-monthly" class="font-bold text-blue-600"></span>으로 충분하지만,
+                        <span id="rec-delay-years" class="font-bold"></span>년만 늦어져도 월 <span id="rec-delay-monthly"
+                            class="font-bold text-red-600"></span>을 저축해야 합니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-blue-600 font-bold">•</span>
+                    <span>부담 없는 금액이라도 <span class="font-bold border-b-2 border-blue-200">지금 당장 시작</span>하는 것이 가장 현명한 투자
+                        전략입니다.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 면책 조항 -->
+    <div class="report-section text-xs text-gray-500 border-t pt-4 mt-8">
+        <p class="mb-2">
+            <strong>면책 조항:</strong> 본 보고서의 분석 결과는 입력된 가정을 기반으로 한 시뮬레이션이며, 실제 투자 수익을 보장하지 않습니다.
+            투자 결정 시에는 시장 상황, 개인의 재무 상태, 리스크 성향 등을 종합적으로 고려하시기 바랍니다.
+        </p>
+        <p class="text-center mt-4 text-gray-400">
+            © 2024-2026 금쇼맘의 금융스쿨. All rights reserved.
+        </p>
+    </div>
+
+    <script>
+        // URL 파라미터에서 데이터 가져오기
+        const params = new URLSearchParams(window.location.search);
+
+        // 날짜 설정
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // 데이터 파싱
+        const reportData = {
+            clientName: params.get('clientName') || '고객명',
+            clientAge: params.get('clientAge') || '-',
+            purpose: params.get('purpose') || '은퇴 자금',
+            targetAmount: parseInt(params.get('targetAmount')) || 0,
+            totalYears: parseInt(params.get('totalYears')) || 20,
+            delayYears: parseInt(params.get('delayYears')) || 5,
+            rate: parseFloat(params.get('rate')) || 6,
+            nowMonthly: parseInt(params.get('nowMonthly')) || 0,
+            nowTotal: parseInt(params.get('nowTotal')) || 0,
+            delayMonthly: parseInt(params.get('delayMonthly')) || 0,
+            delayTotal: parseInt(params.get('delayTotal')) || 0,
+            delayCost: parseInt(params.get('delayCost')) || 0
+        };
+
+        const formatMoney = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n)) + '원';
+
+        // 고객 정보 표시
+        document.getElementById('client-name').textContent = reportData.clientName;
+        document.getElementById('client-age').textContent = reportData.clientAge + '세';
+        document.getElementById('analysis-purpose').textContent = reportData.purpose;
+
+        // 분석 조건 표시
+        document.getElementById('target-amount').textContent = formatMoney(reportData.targetAmount);
+        document.getElementById('total-years').textContent = reportData.totalYears + '년';
+        document.getElementById('delay-years').textContent = reportData.delayYears + '년';
+        document.getElementById('rate').textContent = reportData.rate + '%';
+
+        // 분석 결과 표시 (지금 시작)
+        document.getElementById('now-period').textContent = reportData.totalYears + '년';
+        document.getElementById('now-monthly').textContent = formatMoney(reportData.nowMonthly);
+        document.getElementById('now-total').textContent = formatMoney(reportData.nowTotal);
+
+        // 분석 결과 표시 (지연 시작)
+        document.getElementById('delay-val').textContent = reportData.delayYears;
+        document.getElementById('delay-period').textContent = (reportData.totalYears - reportData.delayYears) + '년';
+        document.getElementById('delay-monthly').textContent = formatMoney(reportData.delayMonthly);
+        document.getElementById('delay-total').textContent = formatMoney(reportData.delayTotal);
+
+        // 게으름 비용
+        document.getElementById('delay-cost').textContent = formatMoney(reportData.delayCost);
+
+        // 권장 사항
+        document.getElementById('rec-now-monthly').textContent = formatMoney(reportData.nowMonthly);
+        document.getElementById('rec-delay-years').textContent = reportData.delayYears;
+        document.getElementById('rec-delay-monthly').textContent = formatMoney(reportData.delayMonthly);
+
+        // 차트 생성
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['지금 시작', reportData.delayYears + '년 지연 시작'],
+                datasets: [
+                    {
+                        label: '총 납입 원금',
+                        data: [reportData.nowTotal, reportData.delayTotal],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)', // Blue
+                            'rgba(239, 68, 68, 0.7)'   // Red
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ' 총 납입 원금: ' + formatMoney(ctx.parsed.x)
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            callback: (value) => {
+                                if (value >= 100000000) return (value / 100000000).toFixed(1) + '억';
+                                if (value >= 10000) return (value / 10000).toFixed(0) + '만';
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

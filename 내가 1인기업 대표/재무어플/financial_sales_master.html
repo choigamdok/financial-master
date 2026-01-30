@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life & Money Mate - Financial Sales Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .range-thumb::-webkit-slider-thumb {
+            cursor: pointer;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        /* Helper for replacing Recharts ResponsiveContainer */
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- Header -->
+        <header
+            class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-3 mb-4 md:mb-0">
+                <div class="bg-blue-600 p-3 rounded-lg text-white">
+                    <i data-lucide="calculator" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Life & Money Mate</h1>
+                    <p class="text-slate-500 text-sm">FP를 위한 실전 재무설계 & 세일즈 도구</p>
+                </div>
+            </div>
+            <!-- Nav -->
+            <div class="w-full md:w-auto overflow-x-auto">
+                <div class="flex gap-2 bg-slate-100 p-1.5 rounded-lg whitespace-nowrap">
+                    <button onclick="switchTab('compound')" id="btn-compound"
+                        class="tab-btn px-3 py-2 rounded-md text-sm font-medium transition-all bg-white text-blue-600 shadow-sm">복리
+                        계산기</button>
+                    <button onclick="switchTab('delay')" id="btn-delay"
+                        class="tab-btn px-3 py-2 rounded-md text-sm font-medium transition-all text-slate-500 hover:text-slate-700">게으름
+                        비용</button>
+                    <button onclick="switchTab('retirement')" id="btn-retirement"
+                        class="tab-btn px-3 py-2 rounded-md text-sm font-medium transition-all text-slate-500 hover:text-slate-700">은퇴
+                        설계</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-200 min-h-[500px]">
+
+            <!-- Tab 1: Compound Calculator -->
+            <div id="tab-compound" class="tab-content active space-y-6">
+                <div class="text-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                        <i data-lucide="trending-up" class="text-red-500 w-5 h-5"></i> 복리의 마법 시뮬레이터
+                    </h3>
+                    <p class="text-sm text-slate-500">"지금 쓰는 푼돈이 미래의 목돈이 됩니다."</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Inputs -->
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="text-gray-700 font-semibold mb-1 block">현재 나이 (세)</span>
+                            <input type="number" id="cc-age" value="45"
+                                class="w-full p-2 border rounded text-right font-mono" inputmode="numeric">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700 font-semibold mb-1 block">재무 목적</span>
+                            <input type="text" id="cc-goal" placeholder="예: 내 집 마련, 세계일주"
+                                class="w-full p-2 border rounded text-right text-slate-700 placeholder-slate-400">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700 font-semibold mb-1 block">월 저축액 (원)</span>
+                            <input type="range" id="cc-save-range" min="100000" max="5000000" step="50000"
+                                value="300000" class="w-full accent-blue-600 mb-2">
+                            <input type="number" id="cc-save-input" value="300000"
+                                class="w-full p-2 border rounded text-right font-mono">
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700 font-semibold mb-1 block">예상 수익률 (%)</span>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="cc-rate-range" min="1" max="15" step="0.5" value="5"
+                                    class="w-full accent-green-600">
+                                <span id="cc-rate-text" class="font-bold w-12 text-right">5%</span>
+                            </div>
+                        </label>
+                        <label class="block">
+                            <span class="text-gray-700 font-semibold mb-1 block">투자 기간 (년)</span>
+                            <div class="flex items-center gap-2">
+                                <input type="range" id="cc-years-range" min="5" max="40" step="1" value="10"
+                                    class="w-full accent-purple-600">
+                                <span id="cc-years-text" class="font-bold w-12 text-right">10년</span>
+                            </div>
+                            <p id="cc-end-age" class="text-xs text-right text-purple-600 mt-1">예상 만기 나이: 55세</p>
+                        </label>
+                    </div>
+
+                    <!-- Result & Chart -->
+                    <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="chart-container mb-4">
+                            <canvas id="compoundChart"></canvas>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                <p class="text-xs text-slate-500 mb-1">총 납입 원금</p>
+                                <p id="cc-res-principal" class="font-bold text-slate-700 text-sm md:text-base">0</p>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 shadow-sm">
+                                <p class="text-xs text-blue-500 mb-1">총 이자 수익</p>
+                                <p id="cc-res-interest" class="font-bold text-blue-600 text-sm md:text-base">+0</p>
+                            </div>
+                            <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm">
+                                <p id="cc-res-goal-label" class="text-xs text-indigo-500 mb-1">최종 자산</p>
+                                <p id="cc-res-total" class="font-bold text-indigo-700 text-sm md:text-base">0</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center border-t border-slate-200 pt-3">
+                            <p class="text-sm text-slate-500">
+                                총 수익률: <span id="cc-res-yield" class="font-bold text-green-600 text-lg">0%</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Cost of Delay -->
+            <div id="tab-delay" class="tab-content space-y-6">
+                <div class="text-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                        <i data-lucide="clock" class="text-orange-500 w-5 h-5"></i> 게으름의 대가 (Cost of Delay)
+                    </h3>
+                    <p class="text-sm text-slate-500">"오늘의 망설임이 미래의 가장 큰 비용입니다."</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <!-- Inputs -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="font-bold text-gray-700 border-b pb-2">목표 설정</h4>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">현재 나이</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="cd-age" value="45"
+                                    class="w-full p-2 border rounded font-bold text-slate-700">
+                                <span class="self-center text-sm text-slate-500 w-10">세</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">재무 목적</label>
+                            <input type="text" id="cd-goal" placeholder="예: 은퇴 자금"
+                                class="w-full p-2 border rounded font-bold text-slate-700 placeholder-slate-400">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">목표 금액</label>
+                            <div class="flex gap-2">
+                                <input type="number" id="cd-amount" value="100000000"
+                                    class="w-full p-2 border rounded font-bold text-slate-700">
+                                <span class="self-center font-bold text-sm w-10">원</span>
+                            </div>
+                            <div class="flex gap-2 text-xs">
+                                <button onclick="setCdAmount(50000000)"
+                                    class="bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">5천만</button>
+                                <button onclick="setCdAmount(100000000)"
+                                    class="bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">1억</button>
+                                <button onclick="setCdAmount(300000000)"
+                                    class="bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">3억</button>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">총 준비 기간: <span id="cd-years-text"
+                                    class="font-bold text-blue-600">20년</span></label>
+                            <input type="range" id="cd-years" min="1" max="50" value="20"
+                                class="w-full accent-blue-600">
+                            <p id="cd-end-age" class="text-xs text-right text-gray-400 font-bold">목표 달성 나이: 65세</p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">지연 기간: <span id="cd-delay-text"
+                                    class="font-bold text-red-500">5년 뒤 시작</span></label>
+                            <input type="range" id="cd-delay" min="1" max="19" value="5" class="w-full accent-red-500">
+                            <p class="text-xs text-right text-gray-400">최대 설정까지 자동 조정됨</p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm text-gray-600 block">수익률: <span id="cd-rate-text"
+                                    class="font-bold text-green-600">6%</span></label>
+                            <input type="range" id="cd-rate" min="2" max="10" step="0.5" value="6"
+                                class="w-full accent-green-600">
+                        </div>
+                    </div>
+
+                    <!-- Visuals -->
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative overflow-hidden">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="font-bold text-blue-800 flex items-center gap-2"><i
+                                        data-lucide="check-circle" class="w-4 h-4"></i> 지금 (<span
+                                        id="cd-res-now-age">45</span>세) 시작하면</h5>
+                                <span class="text-xs font-bold bg-blue-200 text-blue-800 px-2 py-1 rounded">BEST</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-sm text-blue-600">월 저축액 (<span id="cd-res-now-years">20</span>년)</p>
+                                    <p id="cd-res-now-monthly" class="text-2xl font-bold text-blue-900">0</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-blue-500">총 불입원금</p>
+                                    <p id="cd-res-now-total" class="text-sm font-bold text-blue-700">0</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 p-4 rounded-xl border border-red-100 relative">
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="font-bold text-red-800 flex items-center gap-2"><i data-lucide="alert-circle"
+                                        class="w-4 h-4"></i> <span id="cd-res-delay-years">5</span>년 뒤 (<span
+                                        id="cd-res-delay-age">50</span>세) 시작하면</h5>
+                                <span class="text-xs font-bold bg-red-200 text-red-800 px-2 py-1 rounded">WARNING</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-sm text-red-600">월 저축액 (<span id="cd-res-remain-years">15</span>년)
+                                    </p>
+                                    <p id="cd-res-delay-monthly" class="text-2xl font-bold text-red-900">0</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-red-500">총 불입원금</p>
+                                    <p id="cd-res-delay-total" class="text-sm font-bold text-red-700">0</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800 text-white p-4 rounded-xl text-center shadow-xl">
+                            <!-- animate-pulse removed for stability -->
+                            <p class="text-slate-300 text-sm mb-1">
+                                <span id="cd-res-goal-name"></span>게으름 비용 (<span id="cd-res-delay-val">5</span>년 지연)
+                            </p>
+                            <p class="text-xl font-bold text-yellow-400">
+                                더 내야 하는 돈: <span id="cd-res-cost">0</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Retirement Plan -->
+            <div id="tab-retirement" class="tab-content space-y-6">
+                <div class="text-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center justify-center gap-2">
+                        <i data-lucide="umbrella" class="text-blue-500 w-5 h-5"></i> 은퇴 설계 (황금거위 만들기)
+                    </h3>
+                    <p class="text-sm text-slate-500">"원금은 지키고, 배당(7%)으로만 평생 월급 받기"</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Left: Inputs -->
+                    <div class="space-y-6">
+                        <!-- Section 1 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm">
+                            <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4"></i> 1. 은퇴 목표 설정
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">현재 나이</label>
+                                    <input type="number" id="rp-age" value="40"
+                                        class="w-full p-2 border rounded font-bold text-center">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 block mb-1">은퇴 나이</label>
+                                    <input type="number" id="rp-retire-age" value="65"
+                                        class="w-full p-2 border rounded font-bold text-center">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-500 block mb-1">희망 월 수령액 (은퇴 생활비)</label>
+                                <div class="relative">
+                                    <input type="number" id="rp-pension" step="100000" value="3000000"
+                                        class="w-full p-3 border-2 border-blue-200 rounded-lg font-bold text-right text-lg text-blue-900 focus:border-blue-500 outline-none">
+                                    <span class="absolute left-3 top-3.5 text-blue-400 text-sm">월</span>
+                                    <span class="absolute right-12 top-4 text-xs text-slate-400">원</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 bg-blue-100 p-3 rounded-lg text-center">
+                                <p class="text-xs text-blue-600 mb-1">배당률 7% 기준 필요 목돈 (황금거위)</p>
+                                <p id="rp-target-corpus" class="text-xl font-bold text-blue-800">0</p>
+                            </div>
+                        </div>
+
+                        <!-- Section 2 -->
+                        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                            <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                                <i data-lucide="piggy-bank" class="w-4 h-4"></i> 2. 저축 & 증식 플랜
+                            </h4>
+
+                            <!-- Saving Period -->
+                            <div class="mb-4 pb-4 border-b border-dashed">
+                                <div class="flex justify-between mb-2">
+                                    <label class="font-bold text-sm text-green-700">A. 모으는 기간 (저축)</label>
+                                    <span id="rp-save-years-badge"
+                                        class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">10년</span>
+                                </div>
+                                <input type="range" id="rp-save-years" min="1" max="30" value="10"
+                                    class="w-full accent-green-600 mb-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-slate-500">기대 수익률</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" id="rp-save-rate" value="5"
+                                            class="w-16 p-1 border rounded text-right text-sm">
+                                        <span class="text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deferral Period -->
+                            <div>
+                                <div class="flex justify-between mb-2">
+                                    <label class="font-bold text-sm text-purple-700">B. 불리는 기간 (거치)</label>
+                                    <span id="rp-defer-years-badge"
+                                        class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">15년</span>
+                                </div>
+                                <input type="range" id="rp-defer-years" min="0" max="30" value="15"
+                                    class="w-full accent-purple-600 mb-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-slate-500">기대 수익률</span>
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" id="rp-defer-rate" value="5"
+                                            class="w-16 p-1 border rounded text-right text-sm">
+                                        <span class="text-sm">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Results -->
+                    <div class="flex flex-col gap-6">
+                        <div
+                            class="flex-grow bg-slate-900 text-white rounded-xl shadow-lg flex flex-col justify-center items-center text-center relative overflow-hidden p-6">
+                            <div
+                                class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 via-purple-500 to-blue-500">
+                            </div>
+
+                            <h4 class="text-slate-300 text-sm font-medium mb-6">목표 달성을 위한 월 저축액</h4>
+
+                            <div class="mb-8">
+                                <span id="rp-res-monthly"
+                                    class="text-5xl md:text-6xl font-bold text-yellow-400 tracking-tight">0</span>
+                                <p class="text-slate-400 mt-2 text-sm">
+                                    <span id="rp-res-save-text">10</span>년 동안 매월 납입 시
+                                </p>
+                            </div>
+
+                            <div class="w-full bg-slate-800 rounded-lg p-6 text-sm text-left space-y-4">
+                                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-1">
+                                    <span class="flex items-center gap-2 text-lg font-bold text-green-400">
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div> 1단계: 목돈 만들기
+                                    </span>
+                                    <span id="rp-res-fv-save" class="text-slate-200 font-mono text-base pl-5 md:pl-0">0
+                                        달성</span>
+                                </div>
+
+                                <div id="rp-step-2"
+                                    class="flex flex-col md:flex-row md:justify-between md:items-center gap-1">
+                                    <span class="flex items-center gap-2 text-lg font-bold text-purple-400">
+                                        <div class="w-3 h-3 rounded-full bg-purple-500"></div> 2단계: 굴리기
+                                    </span>
+                                    <span id="rp-res-target" class="text-slate-200 font-mono text-base pl-5 md:pl-0">0
+                                        달성</span>
+                                </div>
+
+                                <div
+                                    class="flex flex-col md:flex-row md:justify-between md:items-center gap-1 border-t border-slate-700 pt-3 mt-2">
+                                    <span class="flex items-center gap-2 text-lg font-bold text-blue-400">
+                                        <div class="w-3 h-3 rounded-full bg-blue-500"></div> 3단계: 평생 월급
+                                    </span>
+                                    <span id="rp-res-pension"
+                                        class="text-yellow-400 font-bold font-mono text-lg pl-5 md:pl-0">매월 0</span>
+                                </div>
+                            </div>
+
+                            <div id="rp-alert"
+                                class="mt-4 flex items-center gap-2 text-orange-400 text-xs bg-orange-400/10 px-3 py-1 rounded-full hidden">
+                                <i data-lucide="alert-circle" class="w-3 h-3"></i> <span>주의: 기간 합계가 은퇴까지 남은 시간과
+                                    다릅니다.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="text-center text-slate-400 text-sm py-4">
+            © 금쇼맘의 금융스쿨 All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // Utils
+        const formatMoney = (n) => new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 }).format(n);
+        const formatNum = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n));
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                el.classList.add('text-slate-500');
+            });
+            const btn = document.getElementById(`btn-${tabName}`);
+            btn.classList.remove('text-slate-500');
+            btn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+        }
+
+        // --- Compound Calculator Logic ---
+        const ccEls = {
+            age: document.getElementById('cc-age'),
+            goal: document.getElementById('cc-goal'),
+            saveRange: document.getElementById('cc-save-range'),
+            saveInput: document.getElementById('cc-save-input'),
+            rateRange: document.getElementById('cc-rate-range'),
+            rateText: document.getElementById('cc-rate-text'),
+            yearsRange: document.getElementById('cc-years-range'),
+            yearsText: document.getElementById('cc-years-text'),
+            endAge: document.getElementById('cc-end-age'),
+            resPrincipal: document.getElementById('cc-res-principal'),
+            resInterest: document.getElementById('cc-res-interest'),
+            resGoalLabel: document.getElementById('cc-res-goal-label'),
+            resTotal: document.getElementById('cc-res-total'),
+            resYield: document.getElementById('cc-res-yield'),
+            canvas: document.getElementById('compoundChart')
+        };
+
+        let compoundChart = null;
+
+        function updateCompound() {
+            const age = Number(ccEls.age.value);
+            const save = Number(ccEls.saveInput.value);
+            const rate = Number(ccEls.rateRange.value);
+            const years = Number(ccEls.yearsRange.value);
+            const goalName = ccEls.goal.value;
+
+            // Update UI mirror inputs
+            ccEls.saveRange.value = save;
+            ccEls.rateText.textContent = rate + '%';
+            ccEls.yearsText.textContent = years + '년';
+            ccEls.endAge.textContent = `예상 만기 나이: ${age + years}세`;
+
+            const data = [];
+            for (let i = 1; i <= years; i++) {
+                const monthlyRate = rate / 100 / 12;
+                const months = i * 12;
+                const fv = save * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+                const principal = save * 12 * i;
+                data.push({
+                    age: age + i,
+                    year: i,
+                    principal: Math.round(principal),
+                    total: Math.round(fv),
+                    interest: Math.round(fv - principal)
+                });
+            }
+
+            const final = data[data.length - 1] || { principal: 0, total: 0, interest: 0 };
+            ccEls.resPrincipal.textContent = formatMoney(final.principal);
+            ccEls.resInterest.textContent = '+' + formatMoney(final.interest);
+            ccEls.resTotal.textContent = formatMoney(final.total);
+            ccEls.resYield.textContent = final.principal > 0 ? ((final.interest / final.principal) * 100).toFixed(1) + '%' : '0%';
+            ccEls.resGoalLabel.textContent = goalName ? `${goalName} (${age + years}세)` : `최종 자산 (${age + years}세)`;
+
+            renderCompoundChart(data);
+        }
+
+        function renderCompoundChart(data) {
+            const ctx = ccEls.canvas.getContext('2d');
+            const labels = data.map(d => `${d.age}세`);
+
+            if (compoundChart) compoundChart.destroy();
+
+            compoundChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '내가 낸 돈', data: data.map(d => d.principal), backgroundColor: '#94a3b8', stack: 'stack1' },
+                        { label: '복리 수익', data: data.map(d => d.interest), backgroundColor: '#3b82f6', stack: 'stack1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { display: false, stacked: true }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.dataset.label}: ${formatMoney(ctx.raw)}`,
+                                title: (items) => `${items[0].label} (투자 ${data[items[0].dataIndex].year}년차)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Attach Compound Listeners
+        [ccEls.age, ccEls.goal].forEach(el => el.addEventListener('input', updateCompound));
+        [ccEls.saveInput].forEach(el => el.addEventListener('input', () => { ccEls.saveRange.value = el.value; updateCompound(); }));
+        [ccEls.saveRange].forEach(el => el.addEventListener('input', () => { ccEls.saveInput.value = el.value; updateCompound(); }));
+        [ccEls.rateRange, ccEls.yearsRange].forEach(el => el.addEventListener('input', updateCompound));
+
+
+        // --- Cost of Delay Logic ---
+        const cdEls = {
+            age: document.getElementById('cd-age'),
+            goal: document.getElementById('cd-goal'),
+            amount: document.getElementById('cd-amount'),
+            years: document.getElementById('cd-years'),
+            yearsText: document.getElementById('cd-years-text'),
+            endAge: document.getElementById('cd-end-age'),
+            delay: document.getElementById('cd-delay'),
+            delayText: document.getElementById('cd-delay-text'),
+            rate: document.getElementById('cd-rate'),
+            rateText: document.getElementById('cd-rate-text'),
+
+            resNowAge: document.getElementById('cd-res-now-age'),
+            resNowYears: document.getElementById('cd-res-now-years'),
+            resNowMonthly: document.getElementById('cd-res-now-monthly'),
+            resNowTotal: document.getElementById('cd-res-now-total'),
+
+            resDelayYears: document.getElementById('cd-res-delay-years'),
+            resDelayAge: document.getElementById('cd-res-delay-age'),
+            resRemainYears: document.getElementById('cd-res-remain-years'),
+            resDelayMonthly: document.getElementById('cd-res-delay-monthly'),
+            resDelayTotal: document.getElementById('cd-res-delay-total'),
+
+            resGoalName: document.getElementById('cd-res-goal-name'),
+            resDelayVal: document.getElementById('cd-res-delay-val'),
+            resCost: document.getElementById('cd-res-cost')
+        };
+
+        function setCdAmount(val) {
+            cdEls.amount.value = val;
+            updateDelay();
+        }
+
+        function calculatePMT(target, r, n) {
+            if (n <= 0) return 0;
+            const monthlyRate = r / 100 / 12;
+            const months = n * 12;
+            const factor = ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+            return target / factor;
+        }
+
+        function updateDelay() {
+            const age = Number(cdEls.age.value);
+            const goalAmount = Number(cdEls.amount.value);
+            const years = Number(cdEls.years.value);
+            const rate = Number(cdEls.rate.value);
+            let delay = Number(cdEls.delay.value);
+            const goalName = cdEls.goal.value;
+
+            // Limit delay
+            if (delay >= years) {
+                delay = years - 1;
+                cdEls.delay.value = delay;
+            }
+
+            cdEls.yearsText.textContent = years + '년';
+            cdEls.endAge.textContent = `목표 달성 나이: ${age + years}세`;
+            cdEls.delayText.textContent = `${delay}년 뒤 시작`;
+            cdEls.rateText.textContent = rate + '%';
+
+            // Calc
+            const nowPayment = calculatePMT(goalAmount, rate, years);
+            const remainingYears = years - delay;
+            const delayedPayment = calculatePMT(goalAmount, rate, remainingYears);
+
+            const totalCostNow = nowPayment * 12 * years;
+            const totalCostDelayed = delayedPayment * 12 * remainingYears;
+            const lostMoney = totalCostDelayed - totalCostNow;
+
+            // Render
+            cdEls.resNowAge.textContent = age;
+            cdEls.resNowYears.textContent = years;
+            cdEls.resNowMonthly.textContent = formatMoney(nowPayment);
+            cdEls.resNowTotal.textContent = formatMoney(totalCostNow);
+
+            cdEls.resDelayYears.textContent = delay;
+            cdEls.resDelayAge.textContent = age + delay;
+            cdEls.resRemainYears.textContent = remainingYears;
+            cdEls.resDelayMonthly.textContent = formatMoney(delayedPayment);
+            cdEls.resDelayTotal.textContent = formatMoney(totalCostDelayed);
+
+            cdEls.resGoalName.textContent = goalName ? `${goalName} 달성을 위한 ` : '';
+            cdEls.resDelayVal.textContent = delay;
+            cdEls.resCost.textContent = formatMoney(lostMoney);
+        }
+
+        // Attach Delay Listeners
+        [cdEls.age, cdEls.goal, cdEls.amount, cdEls.years, cdEls.delay, cdEls.rate].forEach(el => el.addEventListener('input', updateDelay));
+
+
+        // --- Retirement Plan Logic ---
+        const rpEls = {
+            age: document.getElementById('rp-age'),
+            retireAge: document.getElementById('rp-retire-age'),
+            pension: document.getElementById('rp-pension'),
+            targetCorpus: document.getElementById('rp-target-corpus'),
+
+            saveYears: document.getElementById('rp-save-years'),
+            saveYearsBadge: document.getElementById('rp-save-years-badge'),
+            saveRate: document.getElementById('rp-save-rate'),
+
+            deferYears: document.getElementById('rp-defer-years'),
+            deferYearsBadge: document.getElementById('rp-defer-years-badge'),
+            deferRate: document.getElementById('rp-defer-rate'),
+
+            resMonthly: document.getElementById('rp-res-monthly'),
+            resSaveText: document.getElementById('rp-res-save-text'),
+            resFvSave: document.getElementById('rp-res-fv-save'),
+            resTarget: document.getElementById('rp-res-target'),
+            resPension: document.getElementById('rp-res-pension'),
+
+            step2: document.getElementById('rp-step-2'),
+            alert: document.getElementById('rp-alert')
+        };
+        const DIVIDEND_RATE = 7;
+
+        function updateRetirement() {
+            const age = Number(rpEls.age.value);
+            const retireAge = Number(rpEls.retireAge.value);
+            const monthlyPension = Number(rpEls.pension.value);
+            const saveYears = Number(rpEls.saveYears.value);
+            const saveRate = Number(rpEls.saveRate.value);
+            const deferYears = Number(rpEls.deferYears.value);
+            const deferRate = Number(rpEls.deferRate.value);
+
+            // Badges
+            rpEls.saveYearsBadge.textContent = saveYears + '년';
+            rpEls.deferYearsBadge.textContent = deferYears + '년';
+
+            // Calc
+            // Target Corpus
+            const targetCorpus = (monthlyPension * 12) / (DIVIDEND_RATE / 100);
+            rpEls.targetCorpus.textContent = formatMoney(targetCorpus);
+
+            // FV Save
+            const requiredFVSave = targetCorpus / Math.pow(1 + deferRate / 100, deferYears);
+
+            // Monthly Save
+            const monthlyRate = saveRate / 100 / 12;
+            const totalMonths = saveYears * 12;
+            const factor = (Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate;
+            const requiredMonthlySave = requiredFVSave / factor;
+
+            // Render Results
+            rpEls.resMonthly.textContent = formatMoney(requiredMonthlySave);
+            rpEls.resSaveText.textContent = saveYears;
+
+            rpEls.resFvSave.textContent = `${formatMoney(requiredFVSave)} 달성`;
+            rpEls.resTarget.textContent = `${formatMoney(targetCorpus)} 달성`;
+            rpEls.resPension.textContent = `매월 ${formatMoney(monthlyPension)}`;
+
+            // Validation UI
+            if (deferYears > 0) {
+                rpEls.step2.style.display = 'flex';
+            } else {
+                rpEls.step2.style.display = 'none';
+            }
+
+            const totalPlanYears = saveYears + deferYears;
+            const yearsUntilRetire = retireAge - age;
+
+            if (totalPlanYears !== yearsUntilRetire) {
+                rpEls.alert.classList.remove('hidden');
+                rpEls.alert.querySelector('span').textContent = `주의: 설정하신 기간 합계(${totalPlanYears}년)가 은퇴까지 남은 시간(${yearsUntilRetire}년)과 다릅니다.`;
+            } else {
+                rpEls.alert.classList.add('hidden');
+            }
+        }
+
+        // Attach Retirement Listeners
+        Object.values(rpEls).forEach(el => {
+            if (el && el.addEventListener) el.addEventListener('input', updateRetirement);
+        });
+
+        // Initialize All
+        updateCompound();
+        updateDelay();
+        updateRetirement();
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>은퇴 인출 설계 보고서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: white;
+            color: #1f2937;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+
+            .avoid-break {
+                page-break-inside: avoid;
+            }
+        }
+
+        .report-header {
+            border-bottom: 4px solid #9333ea;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-section {
+            margin-bottom: 2rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            text-align: right;
+        }
+
+        .data-table th:first-child,
+        .data-table td:first-child {
+            text-align: center;
+        }
+
+        .data-table th.text-left,
+        .data-table td.text-left {
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #faf5ff;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="p-8 max-w-4xl mx-auto">
+    <!-- 프린트 버튼 -->
+    <div class="no-print mb-6 text-right">
+        <button onclick="window.print()"
+            class="bg-purple-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-purple-700 transition">
+            🖨️ 인쇄 / PDF 저장
+        </button>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="report-header">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 mb-2">은퇴 인출 설계 보고서</h1>
+                <p class="text-sm text-gray-500">Retirement Withdrawal Plan Report</p>
+            </div>
+            <div class="text-right text-sm text-gray-600">
+                <p id="report-date"></p>
+                <p class="font-bold text-purple-600 mt-1">재무설계 마스터</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 고객 정보 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📋 고객 정보</h2>
+        <table class="data-table">
+            <tr>
+                <th class="w-1/4 text-center">고객명</th>
+                <td id="client-name" class="text-left"></td>
+                <th class="w-1/4 text-center">현재 나이</th>
+                <td id="client-age" class="text-left"></td>
+            </tr>
+            <tr>
+                <th class="text-center">분석 목적</th>
+                <td colspan="3" class="text-left"><span id="analysis-purpose"></span></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 은퇴 소득 요약 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">💎 은퇴 소득 요약 (65세 기준)</h2>
+        <div class="grid grid-cols-2 gap-6">
+            <div class="bg-blue-50 p-6 rounded-lg text-center border border-blue-100">
+                <p class="text-sm text-blue-800 mb-2 font-bold">월 예상 수령액 (명목 가치)</p>
+                <p class="text-4xl font-black text-blue-600" id="summary-nominal"></p>
+            </div>
+            <div class="bg-purple-50 p-6 rounded-lg text-center border border-purple-100">
+                <p class="text-sm text-purple-800 mb-2 font-bold">월 예상 수령액 (현재 가치)</p>
+                <p class="text-3xl font-black text-purple-600" id="summary-pv"></p>
+                <p class="text-xs text-gray-500 mt-2">* 물가상승률 2% 반영</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 준비된 은퇴 자금 목록 -->
+    <div class="report-section">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">💰 준비된 은퇴 자금</h2>
+        <table class="data-table text-sm">
+            <thead>
+                <tr>
+                    <th class="text-center">자금명</th>
+                    <th class="text-center">수령 기간</th>
+                    <th class="text-right">월 수령액 (현재 기준)</th>
+                </tr>
+            </thead>
+            <tbody id="funds-list">
+                <!-- JS 로 생성 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 연도별 수령액 차트 -->
+    <div class="report-section avoid-break">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📊 연령별 월 수령액 추이</h2>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" style="height: 350px;">
+            <canvas id="withdrawalChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 상세 수령 계획표 -->
+    <div class="report-section page-break">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">📑 상세 수령 계획표 (단위: 천원)</h2>
+        <div class="overflow-x-auto">
+            <table class="data-table text-sm">
+                <thead class="bg-gray-100 text-gray-600 uppercase font-medium">
+                    <tr id="detailTableHeader">
+                        <!-- 동적 생성 -->
+                    </tr>
+                </thead>
+                <tbody id="detailTableBody">
+                    <!-- 동적 생성 -->
+                </tbody>
+            </table>
+        </div>
+        <p class="text-xs text-gray-400 mt-2 text-right">* 명목: 해당 시점의 금액 / 실질: 물가상승률(2%)을 반영하여 현재 가치로 환산한 금액</p>
+    </div>
+
+    <!-- 권장 사항 -->
+    <div class="report-section avoid-break">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-gray-200">💡 재무 설계사 조언</h2>
+        <div class="bg-purple-50 p-6 rounded-lg border-l-4 border-purple-500">
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-start gap-2">
+                    <span class="text-purple-600 font-bold">•</span>
+                    <span>은퇴 후 소득 절벽을 막기 위해 국민연금, 퇴직연금, 개인연금의 '3층 연금' 구조를 튼튼히 해야 합니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-purple-600 font-bold">•</span>
+                    <span>물가 상승으로 인해 화폐 가치가 하락하므로, 실질 구매력을 유지하려면 물가 연동형 자산(국민연금 등)의 비중이 중요합니다.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-purple-600 font-bold">•</span>
+                    <span>특정 시기(예: 70대 초반)에 소득이 부족하지 않도록 인출 시기를 전략적으로 분산 배치하는 것이 좋습니다.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 면책 조항 -->
+    <div class="report-section text-xs text-gray-500 border-t pt-4 mt-8">
+        <p class="mb-2">
+            <strong>면책 조항:</strong> 본 보고서의 분석 결과는 입력된 가정을 기반으로 한 시뮬레이션이며, 실제 투자 수익을 보장하지 않습니다.
+            투자 결정 시에는 시장 상황, 개인의 재무 상태, 리스크 성향 등을 종합적으로 고려하시기 바랍니다.
+        </p>
+        <p class="text-center mt-4 text-gray-400">
+            © 2024-2026 금쇼맘의 금융스쿨. All rights reserved.
+        </p>
+    </div>
+
+    <script>
+        // 날짜 설정
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // 1. URL 파라미터 파싱
+        const params = new URLSearchParams(window.location.search);
+
+        let funds = [];
+        try {
+            const fundsStr = params.get('funds');
+            if (fundsStr) {
+                funds = JSON.parse(decodeURIComponent(fundsStr));
+            }
+        } catch (e) {
+            console.error('Funds parsing error:', e);
+        }
+
+        const reportData = {
+            clientName: params.get('clientName') || '고객명',
+            clientAge: params.get('clientAge') || '-',
+            purpose: params.get('purpose') || '은퇴 인출 설계',
+            currentAge: parseInt(params.get('currentAge')) || 50,
+            summaryNominal: params.get('summaryNominal') || '0',
+            summaryPV: params.get('summaryPV') || '0'
+        };
+
+        const formatMoney = (n) => parseInt(n).toLocaleString() + '천원';
+
+        // 2. 데이터 표시
+        document.getElementById('client-name').textContent = reportData.clientName;
+        document.getElementById('client-age').textContent = reportData.clientAge + '세 (' + reportData.currentAge + '세 기준 설계)';
+        document.getElementById('analysis-purpose').textContent = reportData.purpose;
+
+        document.getElementById('summary-nominal').textContent = formatMoney(reportData.summaryNominal.replace(/,/g, ''));
+        document.getElementById('summary-pv').textContent = formatMoney(reportData.summaryPV.replace(/,/g, ''));
+
+        // 3. 자금 목록 표시
+        const fundsListBody = document.getElementById('funds-list');
+        funds.filter(f => f.amount > 0).forEach(fund => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-left font-medium">${fund.name}</td>
+                <td class="text-center">${fund.startAge}세 ~ ${fund.endAge}세</td>
+                <td class="text-right">${fund.amount.toLocaleString()}천원</td>
+            `;
+            fundsListBody.appendChild(tr);
+        });
+
+        // 4. 데이터 계산
+        const PENSION_GROWTH_RATE = 0.015;
+        const INFLATION_RATE = 0.02;
+
+        const minStartAge = Math.min(...funds.map(f => f.startAge));
+        const maxEndAge = Math.max(...funds.map(f => f.endAge));
+        const displayStartAge = Math.min(reportData.currentAge, minStartAge);
+        const displayEndAge = Math.max(90, maxEndAge);
+
+        const chartData = [];
+        const labels = [];
+
+        for (let age = displayStartAge; age <= displayEndAge; age++) {
+            labels.push(age + '세');
+            let row = { age, funds: [], totalNominal: 0, totalPV: 0 };
+
+            funds.forEach(fund => {
+                let amount = 0;
+                if (age >= fund.startAge && age <= fund.endAge) {
+                    if (fund.isInflationLinked) {
+                        const years = age - fund.startAge;
+                        amount = fund.amount * Math.pow(1 + PENSION_GROWTH_RATE, years);
+                    } else {
+                        amount = fund.amount;
+                    }
+                }
+                row.funds.push(Math.round(amount));
+                row.totalNominal += amount;
+            });
+
+            const yearsFromNow = age - reportData.currentAge;
+            const discount = Math.pow(1 + INFLATION_RATE, Math.max(0, yearsFromNow));
+            row.totalPV = Math.round(row.totalNominal / discount);
+            row.totalNominal = Math.round(row.totalNominal);
+
+            chartData.push(row);
+        }
+
+        // 5. 차트 생성
+        const FUND_COLORS = ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#ec4899', '#a855f7'];
+
+        const datasets = funds.map((fund, idx) => ({
+            label: fund.name,
+            data: chartData.map(d => d.funds[idx]),
+            backgroundColor: FUND_COLORS[idx % FUND_COLORS.length],
+            stack: 'Stack 0',
+        }));
+
+        datasets.push({
+            type: 'line',
+            label: '합계 (실질)',
+            data: chartData.map(d => d.totalPV),
+            borderColor: '#374151',
+            borderWidth: 3,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 0
+        });
+
+        const ctx = document.getElementById('withdrawalChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: {
+                        stacked: true,
+                        grid: { borderDash: [4, 4] },
+                        ticks: { callback: v => (v / 1000).toFixed(0) + '백만' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }, /* 범례 아래로 */
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                let label = ctx.dataset.label || '';
+                                if (label) label += ': ';
+                                if (ctx.parsed.y !== null) label += ctx.parsed.y.toLocaleString() + ' 천원';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 6. 상세 테이블 생성
+        const detailTableHeader = document.getElementById('detailTableHeader');
+        const detailTableBody = document.getElementById('detailTableBody');
+
+        // Header
+        let headerHTML = `<th class="text-center bg-gray-100">나이</th>`;
+        funds.forEach(f => {
+            headerHTML += `<th class="text-center whitespace-nowrap">${f.name}</th>`;
+        });
+        headerHTML += `
+            <th class="bg-blue-50 text-blue-900 border-l border-blue-100">합계 (명목)</th>
+            <th class="bg-red-50 text-red-900">합계 (실질)</th>
+        `;
+        detailTableHeader.innerHTML = headerHTML;
+
+        // Body
+        detailTableBody.innerHTML = '';
+        chartData.forEach(row => {
+            const tr = document.createElement('tr');
+
+            let rowHTML = `
+                <td class="text-center font-medium bg-gray-50">
+                    ${row.age}세
+                </td>
+            `;
+
+            row.funds.forEach((amt) => {
+                rowHTML += `
+                    <td class="${amt > 0 ? '' : 'text-gray-300'}">
+                        ${amt > 0 ? amt.toLocaleString() : '-'}
+                    </td>
+                `;
+            });
+
+            rowHTML += `
+                <td class="font-bold text-blue-600 bg-blue-50/30 border-l border-blue-100">
+                    ${row.totalNominal.toLocaleString()}
+                </td>
+                <td class="font-bold text-red-600 bg-red-50/30">
+                    ${row.totalPV.toLocaleString()}
+                </td>
+            `;
+
+            tr.innerHTML = rowHTML;
+            detailTableBody.appendChild(tr);
+        });
+    </script>
+</body>
+
+</html>

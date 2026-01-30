@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인생 & 재무 사이클 (Life Cycle)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Import Maps for React & Libraries via ESM -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+      }
+    }
+    </script>
+
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Font */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useMemo } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import {
+            PlusCircle,
+            Trash2,
+            Briefcase,
+            Heart,
+            Home,
+            Baby,
+            GraduationCap,
+            Plane,
+            Stethoscope,
+            TrendingUp,
+            Coins,
+            Calendar,
+            List
+        } from 'lucide-react';
+
+        // --- 데이터 및 상수 정의 ---
+
+        // 타임라인 1년당 너비 (픽셀)
+        const YEAR_WIDTH = 30;
+        // 목표 카드 하나의 높이 + 간격 (픽셀)
+        const CARD_HEIGHT_WITH_GAP = 42;
+
+        // 20대 삭제됨
+        const AGE_GROUPS = [
+            { id: '30s', label: '30대 (가정형성기)', range: [30, 39], color: 'bg-green-100', borderColor: 'border-green-300', icon: Home },
+            { id: '40s', label: '40대 (자녀성장기)', range: [40, 49], color: 'bg-yellow-100', borderColor: 'border-yellow-300', icon: TrendingUp },
+            { id: '50s', label: '50대 (은퇴준비기)', range: [50, 59], color: 'bg-orange-100', borderColor: 'border-orange-300', icon: GraduationCap },
+            { id: 'retired', label: '은퇴 후 (노후생활기)', range: [60, 100], color: 'bg-gray-100', borderColor: 'border-gray-300', icon: Stethoscope },
+        ];
+
+        const COMMON_EVENTS = {
+            // 20대 삭제됨
+            '30s': [
+                { name: '주택 마련', defaultCost: 300000000, icon: Home },
+                { name: '자녀교육자금', defaultCost: 10000000, icon: GraduationCap },
+                { name: '가족 여행', defaultCost: 5000000, icon: Plane },
+                { name: '은퇴자금', defaultCost: 20000000, icon: Coins },
+            ],
+            '40s': [
+                { name: '자녀 사교육비', defaultCost: 20000000, icon: GraduationCap },
+                { name: '주택 확장', defaultCost: 100000000, icon: Home },
+                { name: '부채 상환', defaultCost: 30000000, icon: Coins },
+                { name: '은퇴자금', defaultCost: 30000000, icon: Coins },
+            ],
+            '50s': [
+                { name: '자녀 대학등록금', defaultCost: 40000000, icon: GraduationCap },
+                { name: '자녀 독립자금', defaultCost: 50000000, icon: Heart },
+                { name: '은퇴자금', defaultCost: 50000000, icon: Coins },
+                { name: '대출상환', defaultCost: 50000000, icon: Coins },
+            ],
+            'retired': [
+                { name: '은퇴 생활비(연)', defaultCost: 30000000, icon: Stethoscope },
+                { name: '의료/간병비', defaultCost: 20000000, icon: Stethoscope },
+                { name: '시니어타운', defaultCost: 200000000, icon: Home },
+                { name: '상속/증여', defaultCost: 100000000, icon: Coins },
+                { name: '은퇴자금', defaultCost: 50000000, icon: Coins },
+            ],
+        };
+
+        // --- 메인 컴포넌트 ---
+
+        function FinancialLifeCycle() {
+            const [currentAge, setCurrentAge] = useState(30);
+            const [selectedTab, setSelectedTab] = useState('30s');
+
+            // 20대 관련 초기 데이터 삭제
+            const [goals, setGoals] = useState([
+                { id: 2, age: 35, label: '첫 주택 마련', amount: 300000000, category: '30s' },
+                { id: 3, age: 60, label: '은퇴', amount: 500000000, category: 'retired' },
+            ]);
+
+            // 입력 폼 상태
+            const [yearsLater, setYearsLater] = useState(1);
+            const [goalName, setGoalName] = useState('');
+            const [goalAmount, setGoalAmount] = useState('');
+
+            const scrollContainerRef = useRef(null);
+
+            // 금액 포맷팅 (한국 원화)
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
+            };
+
+            const formatNumber = (num) => {
+                return new Intl.NumberFormat('ko-KR').format(num);
+            };
+
+            // 겹침 방지를 위한 레이아웃 계산 (Stacking Logic)
+            const layoutGoals = useMemo(() => {
+                // 1. 나이순 정렬
+                const sortedGoals = [...goals].sort((a, b) => a.age - b.age);
+
+                // 2. 각 목표별 시각적 점유 구간(Track) 계산
+                const occupancy = {}; // { [age]: [boolean, boolean, ...] } -> 해당 나이의 0번 트랙, 1번 트랙 사용 여부
+
+                return sortedGoals.map(goal => {
+                    const startAge = goal.age;
+                    // 5년치 너비만큼 점유한다고 가정
+                    const endAge = startAge + 4;
+
+                    let trackIndex = 0;
+                    // 사용 가능한 트랙 찾기
+                    while (true) {
+                        let isOccupied = false;
+                        // 목표가 차지할 기간(startAge ~ endAge) 동안 해당 trackIndex가 비어있는지 확인
+                        for (let a = startAge; a <= endAge; a++) {
+                            if (occupancy[a] && occupancy[a][trackIndex]) {
+                                isOccupied = true;
+                                break;
+                            }
+                        }
+                        if (!isOccupied) break; // 비어있으면 이 트랙 사용
+                        trackIndex++; // 차있으면 다음 트랙(위층) 확인
+                    }
+
+                    // 점유 상태 업데이트
+                    for (let a = startAge; a <= endAge; a++) {
+                        if (!occupancy[a]) occupancy[a] = [];
+                        occupancy[a][trackIndex] = true;
+                    }
+
+                    return { ...goal, trackIndex };
+                });
+            }, [goals]);
+
+
+            // 탭 변경 시 스크롤을 맨 앞으로 초기화
+            useEffect(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                }
+            }, [selectedTab]);
+
+            // 목표 추가 핸들러
+            const addGoal = () => {
+                if (!goalName) return;
+
+                const targetAge = currentAge + parseInt(yearsLater);
+                const newGoal = {
+                    id: Date.now(),
+                    age: targetAge,
+                    label: goalName,
+                    amount: parseInt(goalAmount) || 0,
+                    category: selectedTab
+                };
+
+                setGoals([...goals, newGoal].sort((a, b) => a.age - b.age));
+
+                // 폼 초기화
+                setGoalName('');
+                setGoalAmount('');
+                setYearsLater(1);
+            };
+
+            // 목표 삭제 핸들러
+            const removeGoal = (id) => {
+                setGoals(goals.filter(g => g.id !== id));
+            };
+
+            // 추천 이벤트 클릭 핸들러
+            const handlePresetClick = (event) => {
+                setGoalName(event.name);
+                setGoalAmount(event.defaultCost);
+                // 기본적으로 3년 뒤로 설정
+                setYearsLater(3);
+            };
+
+            // 현재 선택된 탭의 시작 나이 계산
+            const getStartAge = () => {
+                const group = AGE_GROUPS.find(g => g.id === selectedTab);
+                return group ? group.range[0] : 30;
+            };
+
+            // 부모 창과의 통신 (보고서 데이터 전송)
+            useEffect(() => {
+                const handleMessage = (event) => {
+                    if (event.data === 'requestReportData') {
+                        const reportData = {
+                            type: 'lifecycleResponse',
+                            currentAge,
+                            goals,
+                            totalAmount: goals.reduce((acc, curr) => acc + curr.amount, 0)
+                        };
+                        window.parent.postMessage(reportData, '*');
+                    }
+                };
+
+                window.addEventListener('message', handleMessage);
+                return () => window.removeEventListener('message', handleMessage);
+            }, [currentAge, goals]);
+
+            const timelineStartAge = getStartAge();
+            const timelineEndAge = 90;
+            // 타임라인 길이 계산
+            const timelineLength = Math.max(0, timelineEndAge - timelineStartAge + 1);
+
+            return (
+                <div className="flex flex-col lg:flex-row h-screen bg-gray-50 text-slate-800 font-sans overflow-hidden">
+
+                    {/* --- 왼쪽 패널: 컨트롤 & 입력 --- */}
+                    <div className="w-full lg:w-1/4 flex flex-col border-r border-gray-200 bg-white shadow-lg z-10 min-w-[300px]">
+                        <div className="p-5 border-b border-gray-100">
+                            <h1 className="text-xl font-bold text-indigo-700 flex items-center gap-2">
+                                <TrendingUp className="w-6 h-6" />
+                                인생 & 재무 사이클
+                            </h1>
+                        </div>
+
+                        {/* 현재 나이 입력 */}
+                        <div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                            <label className="text-indigo-900 font-semibold text-sm">현재 나이</label>
+                            <div className="flex items-center gap-2 bg-white rounded-lg px-2 py-1 border border-indigo-200 shadow-sm">
+                                <input
+                                    type="number"
+                                    value={currentAge}
+                                    onChange={(e) => setCurrentAge(Number(e.target.value))}
+                                    className="w-12 text-right font-bold text-lg text-indigo-700 focus:outline-none"
+                                />
+                                <span className="text-xs text-gray-500">세</span>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            {/* 생애주기 탭 선택 */}
+                            <div className="px-5 py-3">
+                                <label className="block text-xs font-semibold text-gray-700 mb-2">생애주기 선택</label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {AGE_GROUPS.map((group) => (
+                                        <button
+                                            key={group.id}
+                                            onClick={() => setSelectedTab(group.id)}
+                                            className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${selectedTab === group.id
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {group.label.split(' ')[0]}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 추천 이벤트 (칩) */}
+                            <div className="px-5 pb-3">
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                                        추천 이벤트
+                                    </label>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {COMMON_EVENTS[selectedTab]?.map((event, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handlePresetClick(event)}
+                                                className="flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded text-xs text-gray-700 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shadow-sm"
+                                            >
+                                                <event.icon className="w-3 h-3" />
+                                                {event.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 목표 입력 폼 */}
+                            <div className="px-5 py-2">
+                                <div className="bg-white p-4 rounded-lg border-2 border-indigo-100 shadow-sm">
+                                    <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-1 text-sm">
+                                        <PlusCircle className="w-4 h-4 text-indigo-500" />
+                                        목표 추가
+                                    </h3>
+
+                                    <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-[10px] font-medium text-gray-500 mb-1">몇 년 뒤?</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={yearsLater}
+                                                        onChange={(e) => setYearsLater(Number(e.target.value))}
+                                                        className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    />
+                                                    <span className="absolute right-2 top-1.5 text-gray-400 text-xs">년</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-medium text-gray-500 mb-1">금액</label>
+                                                <input
+                                                    type="number"
+                                                    placeholder="0"
+                                                    value={goalAmount}
+                                                    onChange={(e) => setGoalAmount(e.target.value)}
+                                                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-medium text-gray-500 mb-1">내용</label>
+                                            <input
+                                                type="text"
+                                                placeholder="목표 내용 입력"
+                                                value={goalName}
+                                                onChange={(e) => setGoalName(e.target.value)}
+                                                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                            />
+                                        </div>
+
+                                        <button
+                                            onClick={addGoal}
+                                            disabled={!goalName}
+                                            className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded shadow-md transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                        >
+                                            추가
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 등록된 리스트 */}
+                            <div className="px-5 py-4 border-t border-gray-100 mt-2">
+                                <h3 className="font-bold text-gray-800 mb-2 text-xs flex items-center gap-2">
+                                    <List className="w-3 h-3" /> 내 목표 리스트
+                                </h3>
+                                <div className="space-y-1.5">
+                                    {goals.length === 0 && <p className="text-gray-400 text-xs text-center py-2">추가된 목표가 없습니다.</p>}
+                                    {goals.map((goal) => (
+                                        <div key={goal.id} className="flex items-center justify-between p-2 bg-white border border-gray-100 rounded hover:bg-gray-50 transition-colors group">
+                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">
+                                                    {goal.age}세
+                                                </span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-xs font-medium text-gray-700 truncate">{goal.label}</span>
+                                                    <span className="text-[10px] text-gray-500 truncate">{formatNumber(goal.amount)}원</span>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => removeGoal(goal.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 저작권 표시 */}
+                        <div className="p-2 text-center text-[10px] text-gray-400 border-t border-gray-100 bg-gray-50">
+                            © 금쇼맘의 금융스쿨 All rights reserved
+                        </div>
+                    </div>
+
+                    {/* --- 오른쪽 패널: 가로형 라이프 사이클 타임라인 --- */}
+                    <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+                        <div className="absolute top-0 left-0 w-full h-12 bg-white/80 backdrop-blur-sm z-10 border-b border-gray-200 flex items-center px-4 justify-between">
+                            <span className="font-bold text-gray-500 text-sm flex items-center gap-2">
+                                <Calendar className="w-4 h-4" /> 전체 생애 타임라인 ({timelineStartAge}세 ~ {timelineEndAge}세)
+                            </span>
+                            <div className="flex gap-4 text-xs">
+                                {AGE_GROUPS.map(g => (
+                                    <div key={g.id} className="flex items-center gap-1">
+                                        <span className={`w-3 h-3 rounded-full ${g.color.replace('bg-', 'bg-').replace('100', '400')}`}></span>
+                                        <span className="text-gray-600">{g.label.split(' ')[0]}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 스크롤 영역 */}
+                        <div ref={scrollContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar relative">
+                            <div className="h-full flex relative" style={{ minWidth: 'max-content', paddingTop: '60px', paddingBottom: '40px' }}>
+
+                                {/* 타임라인 렌더링 */}
+                                {Array.from({ length: timelineLength }, (_, i) => i + timelineStartAge).map((age, index) => {
+                                    // 현재 나이인지 확인
+                                    const isCurrentAge = age === currentAge;
+
+                                    // 나이에 따른 그룹 찾기
+                                    const group = AGE_GROUPS.find(g => age >= g.range[0] && age <= g.range[1]);
+                                    const bgColor = group ? group.color : 'bg-gray-50';
+                                    const isDecadeStart = age % 10 === 0;
+                                    const isFiveYear = age % 5 === 0;
+
+                                    // 이 나이에 해당하는 목표들 (계산된 trackIndex 포함)
+                                    const currentGoals = layoutGoals.filter(g => g.age === age);
+
+                                    // Z-Index 계산
+                                    const zIndexValue = timelineLength - index;
+
+                                    return (
+                                        <div
+                                            key={age}
+                                            className={`flex-shrink-0 relative border-r border-gray-100 ${bgColor}`}
+                                            style={{
+                                                width: `${YEAR_WIDTH}px`,
+                                                height: '100%',
+                                                zIndex: zIndexValue
+                                            }}
+                                        >
+                                            {/* 상단: 생애주기 라벨 */}
+                                            {isDecadeStart && group && (
+                                                <div className="absolute top-4 left-1 z-0 overflow-hidden pointer-events-none" style={{ width: `${YEAR_WIDTH * 10}px` }}>
+                                                    <span className={`text-3xl font-black text-slate-200/80 uppercase whitespace-nowrap`}>
+                                                        {group.label.split('(')[0]}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* 현재 나이 마커 라인 */}
+                                            {isCurrentAge && (
+                                                <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-indigo-500 z-20 border-dashed border-l-2 border-indigo-500 transform -translate-x-1/2 pointer-events-none">
+                                                    <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap">
+                                                        현재 {age}세
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 목표/이벤트 카드 (절대 위치로 배치) */}
+                                            <div className="absolute bottom-12 left-0 w-full z-10" style={{ height: 'calc(100% - 100px)' }}>
+                                                {currentGoals.map((goal, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="absolute left-1 bg-white p-1.5 rounded shadow-md border-l-2 border-indigo-500 animate-fade-in-up hover:scale-105 transition-transform cursor-pointer group overflow-hidden"
+                                                        style={{
+                                                            width: `${YEAR_WIDTH * 5}px`, // 5년치 너비
+                                                            bottom: `${goal.trackIndex * CARD_HEIGHT_WITH_GAP}px`, // 층수에 따른 높이 계산 (아래에서부터 쌓음)
+                                                            height: '38px',
+                                                            zIndex: 30
+                                                        }}
+                                                        onClick={() => removeGoal(goal.id)}
+                                                        title="클릭하여 삭제"
+                                                    >
+                                                        <div className="text-xs font-extrabold text-indigo-700 truncate">{goal.label}</div>
+                                                        <div className="text-[11px] font-bold text-gray-900 truncate">{formatNumber(goal.amount)}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* 하단: 나이 눈금 */}
+                                            <div className={`absolute bottom-0 w-full h-12 border-t ${isCurrentAge ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'} flex flex-col items-center justify-center`}>
+                                                {isCurrentAge && <div className="absolute -top-1.5 w-3 h-3 bg-indigo-500 rounded-full"></div>}
+
+                                                {(isFiveYear || isCurrentAge) && (
+                                                    <span className={`text-xs ${isCurrentAge ? 'font-bold text-indigo-700' : 'text-gray-500'} ${isDecadeStart ? 'font-bold text-gray-800' : ''}`}>
+                                                        {age}
+                                                    </span>
+                                                )}
+
+                                                {!isFiveYear && !isCurrentAge && (
+                                                    <span className="w-0.5 h-0.5 rounded-full bg-gray-300"></span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* 하단 총액 요약 바 */}
+                        <div className="h-14 bg-white border-t border-gray-200 flex items-center justify-between px-6 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-gray-500 font-medium">총 라이프 사이클 필요 자금</span>
+                                <span className="text-xl font-bold text-slate-800">
+                                    {formatCurrency(goals.reduce((acc, curr) => acc + curr.amount, 0))}
+                                </span>
+                            </div>
+                            <button
+                                className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
+                                onClick={() => {
+                                    if (window.confirm('모든 목표를 초기화 하시겠습니까?')) {
+                                        setGoals([]);
+                                    }
+                                }}
+                            >
+                                <Trash2 className="w-4 h-4" /> 전체 초기화
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                  width: 6px;
+                  height: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: #f1f5f9;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background: #cbd5e1;
+                  border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: #94a3b8;
+                }
+                @keyframes fade-in-up {
+                  from { opacity: 0; transform: translateY(10px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up {
+                  animation: fade-in-up 0.3s ease-out forwards;
+                }
+              `}</style>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<FinancialLifeCycle />);
+    </script>
+</body>
+
+</html>
